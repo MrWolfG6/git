@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Meridian Autohaus — Mercedes-Benz | The Best or Nothing</title>
+<meta name="description" content="Meridian Autohaus. An authorized Mercedes-Benz retailer. Sales, bespoke configuration and lifetime ownership care for the world's most desirable automobiles." />
+<meta name="theme-color" content="#000000" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='none' stroke='white' stroke-width='6'/><path d='M50 50 L50 6 M50 50 L12 72 M50 50 L88 72' stroke='white' stroke-width='6' fill='none'/></svg>" />
+</head>
+<body class="is-loading">
+
+<!-- ══════════════════ PRELOADER ══════════════════ -->
+<div class="loader" id="loader">
+  <div class="loader__inner">
+    <div class="loader__star">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <circle class="ls-ring" cx="100" cy="100" r="88" />
+        <path class="ls-spoke" d="M100 100 L100 16" />
+        <path class="ls-spoke" d="M100 100 L27 142" />
+        <path class="ls-spoke" d="M100 100 L173 142" />
+      </svg>
+    </div>
+    <div class="loader__word"><span>M</span><span>E</span><span>R</span><span>I</span><span>D</span><span>I</span><span>A</span><span>N</span></div>
+    <div class="loader__sub">Authorized Mercedes-Benz Retailer</div>
+  </div>
+  <div class="loader__meta">
+    <span class="loader__status" id="loaderStatus">Preparing the showroom</span>
+    <span class="loader__count"><em id="loaderCount">0</em><i>%</i></span>
+  </div>
+  <div class="loader__bar"><span id="loaderBar"></span></div>
+  <div class="loader__curtain"></div>
+</div>
+
+<!-- ══════════════════ CHROME ══════════════════ -->
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="cursor" id="cursor" aria-hidden="true"><span></span></div>
+<div class="cursor-dot" id="cursorDot" aria-hidden="true"></div>
+<div class="scroll-progress"><span id="scrollBar"></span></div>
+
+<canvas id="webgl"></canvas>
+<div class="stage-tint" aria-hidden="true"></div>
+<div class="stage-dim" id="stageDim" aria-hidden="true"></div>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<header class="nav" id="nav">
+  <a class="nav__brand" href="#top" data-magnetic>
+    <svg class="nav__star" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4"/>
+      <path d="M50 50 L50 8 M50 50 L14 71 M50 50 L86 71" stroke="currentColor" stroke-width="4" fill="none"/>
+    </svg>
+    <span class="nav__name">Meridian<em>Autohaus</em></span>
+  </a>
+  <nav class="nav__links">
+    <a href="#heritage" data-magnetic>Heritage</a>
+    <a href="#design" data-magnetic>Design</a>
+    <a href="#performance" data-magnetic>Performance</a>
+    <a href="#configure" data-magnetic>Configure</a>
+    <a href="#collection" data-magnetic>Collection</a>
+  </nav>
+  <a href="#contact" class="nav__cta" data-magnetic><span>Book a Viewing</span></a>
+  <button class="nav__burger" id="burger" aria-label="Menu"><i></i><i></i></button>
+</header>
+
+<div class="menu" id="menu">
+  <div class="menu__grid">
+    <a href="#heritage"><em>01</em>Heritage</a>
+    <a href="#design"><em>02</em>Design</a>
+    <a href="#performance"><em>03</em>Performance</a>
+    <a href="#configure"><em>04</em>Configure</a>
+    <a href="#collection"><em>05</em>Collection</a>
+    <a href="#contact"><em>06</em>Contact</a>
+  </div>
+</div>
+
+<main id="top">
+
+  <!-- ══════════════════ HERO ══════════════════ -->
+  <section class="section hero" id="hero" data-scene="hero">
+    <div class="hero__meta hero__meta--l">
+      <span class="rot">Est. 1886 — Stuttgart</span>
+    </div>
+    <div class="hero__meta hero__meta--r">
+      <span class="rot">Scroll to explore</span>
+      <span class="hero__line"></span>
+    </div>
+
+    <div class="hero__content">
+      <p class="eyebrow" data-reveal="fade">Authorized Mercedes-Benz Retailer</p>
+      <h1 class="display">
+        <span class="line" data-reveal="line">The Art of</span>
+        <span class="line line--italic" data-reveal="line">Perfection</span>
+      </h1>
+      <p class="hero__lede" data-reveal="fade">
+        A century and a half of engineering conviction, presented in a single room.
+        Every automobile we deliver has been prepared to a standard that leaves nothing to interpretation.
+      </p>
+      <div class="hero__actions" data-reveal="fade">
+        <a href="#collection" class="btn btn--fill" data-magnetic><span>View the Collection</span></a>
+        <a href="#configure" class="btn btn--ghost" data-magnetic><span>Configure Yours</span></a>
+      </div>
+    </div>
+
+    <div class="hero__scroll" aria-hidden="true">
+      <span class="hero__scroll-track"><i></i></span>
+    </div>
+  </section>
+
+  <!-- ══════════════════ MARQUEE ══════════════════ -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__row" id="marquee1">
+      <span>The Best or Nothing</span><span>✦</span><span>The Best or Nothing</span><span>✦</span>
+      <span>The Best or Nothing</span><span>✦</span><span>The Best or Nothing</span><span>✦</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════ HERITAGE ══════════════════ -->
+  <section class="section heritage" id="heritage" data-scene="heritage">
+    <div class="wrap">
+      <div class="heritage__col">
+        <p class="tag" data-reveal="fade"><i>01</i> Heritage</p>
+        <h2 class="h2">
+          <span class="line" data-reveal="line">One hundred and</span>
+          <span class="line" data-reveal="line">forty years of</span>
+          <span class="line line--italic" data-reveal="line">refusing to settle.</span>
+        </h2>
+        <p data-reveal="fade">
+          In 1886 Carl Benz filed a patent for a vehicle powered by a gas engine. It was not the fastest
+          thing on the road — it was the only thing on the road. That instinct, to build the thing that
+          does not yet exist rather than the thing that merely sells, has never left Stuttgart.
+        </p>
+        <p data-reveal="fade">
+          Meridian Autohaus exists to carry that instinct through to your driveway. We do not move metal.
+          We place automobiles with the people who understand them.
+        </p>
+        <div class="stats">
+          <div class="stat" data-reveal="fade"><em class="count" data-count="1886" data-plain="1">1886</em><span>The first automobile</span></div>
+          <div class="stat" data-reveal="fade"><em class="count" data-count="140">0</em><span>Years of engineering</span></div>
+          <div class="stat" data-reveal="fade"><em class="count" data-count="3">0</em><span>Points. One star.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ DESIGN ══════════════════ -->
+  <section class="section design" id="design" data-scene="design">
+    <div class="wrap">
+      <div class="design__head">
+        <p class="tag" data-reveal="fade"><i>02</i> Design</p>
+        <h2 class="h2 h2--center">
+          <span class="line" data-reveal="line">Sculpted by</span>
+          <span class="line line--italic" data-reveal="line">obsession</span>
+        </h2>
+      </div>
+      <div class="feature-rows">
+        <article class="feature" data-reveal="fade">
+          <em>Sensual Purity</em>
+          <h3>Surfaces without excuse</h3>
+          <p>Fewer lines, deeper tension. Every crease exists because removing it would cost the car its posture.</p>
+        </article>
+        <article class="feature" data-reveal="fade">
+          <em>The Star</em>
+          <h3>Land, sea and air</h3>
+          <p>Three points, drawn by Gottlieb Daimler in a postcard to his wife in 1872. It has outlived every trend since.</p>
+        </article>
+        <article class="feature" data-reveal="fade">
+          <em>Light Signature</em>
+          <h3>Recognised before seen</h3>
+          <p>Digital Light projects over two million pixels onto the road ahead. The silhouette in your mirror is deliberate.</p>
+        </article>
+        <article class="feature" data-reveal="fade">
+          <em>Materials</em>
+          <h3>Nappa, open-pore, aluminium</h3>
+          <p>Hand-selected hides, wood cut from a single trunk per cabin, metal that stays cold to the touch. No imitation surfaces.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ PERFORMANCE ══════════════════ -->
+  <section class="section performance" id="performance" data-scene="performance">
+    <div class="wrap">
+      <p class="tag" data-reveal="fade"><i>03</i> Performance</p>
+      <h2 class="h2 h2--center">
+        <span class="line" data-reveal="line">Engineered in</span>
+        <span class="line line--italic" data-reveal="line">Affalterbach</span>
+      </h2>
+      <div class="specs">
+        <div class="spec" data-reveal="fade">
+          <em><span class="count" data-count="3.2" data-dec="1">0</span><i>s</i></em>
+          <span>0 — 100 km/h</span>
+        </div>
+        <div class="spec" data-reveal="fade">
+          <em><span class="count" data-count="831">0</span><i>hp</i></em>
+          <span>Combined output</span>
+        </div>
+        <div class="spec" data-reveal="fade">
+          <em><span class="count" data-count="1082">0</span><i>Nm</i></em>
+          <span>Peak torque</span>
+        </div>
+        <div class="spec" data-reveal="fade">
+          <em><span class="count" data-count="317">0</span><i>km/h</i></em>
+          <span>Top speed, limited</span>
+        </div>
+      </div>
+      <p class="performance__note" data-reveal="fade">
+        One man, one engine. Every AMG powerplant is assembled by a single technician who signs the plate before it leaves the bench.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══════════════════ CONFIGURATOR ══════════════════ -->
+  <section class="section configure" id="configure" data-scene="configure">
+    <div class="wrap configure__wrap">
+      <div class="configure__head">
+        <p class="tag" data-reveal="fade"><i>04</i> Configure</p>
+        <h2 class="h2">
+          <span class="line" data-reveal="line">Your car,</span>
+          <span class="line line--italic" data-reveal="line">to the shade.</span>
+        </h2>
+        <p class="configure__lede" data-reveal="fade">
+          Select a finish. The car in front of you changes in real time — as it will in the studio,
+          under the same lighting we use for delivery.
+        </p>
+      </div>
+
+      <div class="swatches" id="swatches">
+        <button class="swatch is-active" data-color="#0a0a0c" data-metal="0.92" data-rough="0.16" data-name="Obsidian Black" data-code="MANUFAKTUR 197">
+          <i style="--c:#0a0a0c"></i><span>Obsidian Black</span>
+        </button>
+        <button class="swatch" data-color="#b9bfc6" data-metal="1.0" data-rough="0.20" data-name="Iridium Silver" data-code="METALLIC 775">
+          <i style="--c:#b9bfc6"></i><span>Iridium Silver</span>
+        </button>
+        <button class="swatch" data-color="#4d5257" data-metal="1.0" data-rough="0.22" data-name="Selenite Grey" data-code="MAGNO 992">
+          <i style="--c:#4d5257"></i><span>Selenite Grey</span>
+        </button>
+        <button class="swatch" data-color="#16365e" data-metal="1.0" data-rough="0.18" data-name="Cavansite Blue" data-code="METALLIC 890">
+          <i style="--c:#16365e"></i><span>Cavansite Blue</span>
+        </button>
+        <button class="swatch" data-color="#6d0f16" data-metal="0.95" data-rough="0.17" data-name="Patagonia Red" data-code="MANUFAKTUR 3892">
+          <i style="--c:#6d0f16"></i><span>Patagonia Red</span>
+        </button>
+        <button class="swatch" data-color="#e8e8e6" data-metal="0.75" data-rough="0.24" data-name="Diamond White" data-code="BRIGHT 799">
+          <i style="--c:#e8e8e6"></i><span>Diamond White</span>
+        </button>
+      </div>
+
+      <div class="configure__readout">
+        <div class="readout">
+          <em id="paintName">Obsidian Black</em>
+          <span id="paintCode">MANUFAKTUR 197</span>
+        </div>
+        <a href="#contact" class="btn btn--fill" data-magnetic><span>Reserve this Build</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ COLLECTION ══════════════════ -->
+  <section class="section collection" id="collection" data-scene="collection">
+    <div class="collection__intro wrap">
+      <p class="tag" data-reveal="fade"><i>05</i> Collection</p>
+      <h2 class="h2">
+        <span class="line" data-reveal="line">In the room,</span>
+        <span class="line line--italic" data-reveal="line">right now.</span>
+      </h2>
+    </div>
+
+    <div class="hscroll" id="hscroll">
+      <div class="hscroll__track" id="hscrollTrack">
+        <article class="card" style="--g1:#1a1d21;--g2:#050506">
+          <div class="card__no">S 580</div>
+          <div class="card__body">
+            <h3>S-Class Saloon</h3>
+            <p>The reference point. Rear-axle steering, executive rear cabin, MBUX with augmented navigation.</p>
+            <ul><li>4.0 V8 · 503 hp</li><li>Nappa · Open-pore walnut</li><li>Delivery mileage</li></ul>
+          </div>
+          <div class="card__foot"><em>From £119,400</em><span>Enquire</span></div>
+        </article>
+        <article class="card" style="--g1:#241417;--g2:#070406">
+          <div class="card__no">AMG GT</div>
+          <div class="card__body">
+            <h3>AMG GT 63 S</h3>
+            <p>Affalterbach's front-mid V8, hand-assembled, with rear-biased 4MATIC+ and active aero.</p>
+            <ul><li>4.0 V8 Biturbo · 831 hp</li><li>0—100 in 2.9s</li><li>Carbon ceramic</li></ul>
+          </div>
+          <div class="card__foot"><em>From £165,900</em><span>Enquire</span></div>
+        </article>
+        <article class="card" style="--g1:#0f1c24;--g2:#040709">
+          <div class="card__no">EQS</div>
+          <div class="card__body">
+            <h3>EQS 580 4MATIC</h3>
+            <p>Silence, engineered. The Hyperscreen spans the dash; the drag coefficient is the lowest in production.</p>
+            <ul><li>Dual motor · 516 hp</li><li>Up to 770 km range</li><li>0.20 Cd</li></ul>
+          </div>
+          <div class="card__foot"><em>From £127,300</em><span>Enquire</span></div>
+        </article>
+        <article class="card" style="--g1:#1d1a13;--g2:#060504">
+          <div class="card__no">G 63</div>
+          <div class="card__body">
+            <h3>G-Class AMG</h3>
+            <p>Three differential locks and a ladder frame, dressed for Mayfair. Unchanged where it matters since 1979.</p>
+            <ul><li>4.0 V8 Biturbo · 585 hp</li><li>Three locking diffs</li><li>Manufaktur interior</li></ul>
+          </div>
+          <div class="card__foot"><em>From £182,750</em><span>Enquire</span></div>
+        </article>
+        <article class="card" style="--g1:#191622;--g2:#050407">
+          <div class="card__no">MAYBACH</div>
+          <div class="card__body">
+            <h3>Mercedes-Maybach S 680</h3>
+            <p>Two-tone by hand, executive rear seats with calf massage, and a champagne cooler between them.</p>
+            <ul><li>6.0 V12 · 612 hp</li><li>Chauffeur package</li><li>Bespoke two-tone</li></ul>
+          </div>
+          <div class="card__foot"><em>From £198,500</em><span>Enquire</span></div>
+        </article>
+        <article class="card card--cta" style="--g1:#101012;--g2:#000">
+          <div class="card__body">
+            <h3>Sourcing something specific?</h3>
+            <p>Our acquisition desk works a network of eleven European retailers and private collections. Tell us the specification and we will find it.</p>
+          </div>
+          <div class="card__foot"><em>Bespoke sourcing</em><span>Start a search</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ EXPERIENCE ══════════════════ -->
+  <section class="section experience" id="experience" data-scene="experience">
+    <div class="wrap">
+      <h2 class="h2 h2--center">
+        <span class="line" data-reveal="line">Ownership, without</span>
+        <span class="line line--italic" data-reveal="line">the friction.</span>
+      </h2>
+      <div class="pillars">
+        <div class="pillar" data-reveal="fade"><em>I</em><h3>Private Viewing</h3><p>The showroom, closed, for one appointment. Coffee, the car, and nobody selling you anything.</p></div>
+        <div class="pillar" data-reveal="fade"><em>II</em><h3>Delivery Ceremony</h3><p>Handover under studio light with your specification documented and your first drive planned.</p></div>
+        <div class="pillar" data-reveal="fade"><em>III</em><h3>Lifetime Care</h3><p>Factory-trained technicians, collection and return, and a courtesy car of equivalent class. Always.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ CONTACT ══════════════════ -->
+  <section class="section contact" id="contact" data-scene="contact">
+    <div class="wrap contact__wrap">
+      <p class="tag" data-reveal="fade"><i>06</i> Contact</p>
+      <h2 class="display display--sm">
+        <span class="line" data-reveal="line">Begin your</span>
+        <span class="line line--italic" data-reveal="line">journey</span>
+      </h2>
+
+      <form class="form" id="form" novalidate>
+        <div class="field" data-reveal="fade"><input type="text" id="f-name" required /><label for="f-name">Full name</label><i></i></div>
+        <div class="field" data-reveal="fade"><input type="email" id="f-mail" required /><label for="f-mail">Email address</label><i></i></div>
+        <div class="field" data-reveal="fade">
+          <select id="f-model">
+            <option>S-Class Saloon</option><option>AMG GT 63 S</option><option>EQS 580</option>
+            <option>G-Class AMG</option><option>Mercedes-Maybach S 680</option><option>Bespoke sourcing</option>
+          </select>
+          <label for="f-model" class="is-up">Interest</label><i></i>
+        </div>
+        <div class="field field--wide" data-reveal="fade"><input type="text" id="f-msg" /><label for="f-msg">Anything we should know</label><i></i></div>
+        <button type="submit" class="btn btn--fill btn--lg" data-magnetic><span>Request an appointment</span></button>
+        <p class="form__note" id="formNote" role="status"></p>
+      </form>
+
+      <div class="contact__details">
+        <div data-reveal="fade"><em>Showroom</em><span>18 Elmsworth Row<br/>London W1K 4QA</span></div>
+        <div data-reveal="fade"><em>Telephone</em><span>+44 20 7946 0182</span></div>
+        <div data-reveal="fade"><em>Hours</em><span>Mon — Sat, 09:00 — 19:00<br/>Sunday by appointment</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="wrap footer__wrap">
+      <div class="footer__brand">
+        <svg class="footer__star" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="3"/>
+          <path d="M50 50 L50 8 M50 50 L14 71 M50 50 L86 71" stroke="currentColor" stroke-width="3" fill="none"/>
+        </svg>
+        <span>Meridian Autohaus</span>
+      </div>
+      <div class="footer__cols">
+        <div><em>Explore</em><a href="#heritage">Heritage</a><a href="#design">Design</a><a href="#collection">Collection</a></div>
+        <div><em>Services</em><a href="#experience">Private viewing</a><a href="#experience">Servicing</a><a href="#configure">Configurator</a></div>
+        <div><em>Legal</em><a href="#top">Privacy</a><a href="#top">Cookies</a><a href="#top">Terms</a></div>
+      </div>
+      <p class="footer__legal">
+        Meridian Autohaus is an independent retailer concept. Mercedes-Benz, the three-pointed star, AMG and Maybach
+        are trademarks of Mercedes-Benz Group AG, used here for demonstration purposes only.
+        Figures are illustrative. © <span id="year">2026</span>.
+      </p>
+    </div>
+  </footer>
+</main>
+
+<script>
+  /* safety net: if the module pipeline never boots (blocked CDN, no WebGL),
+     hand the page over anyway rather than stranding the visitor on the loader */
+  window.addEventListener('load', () => setTimeout(() => {
+    if (!document.body.classList.contains('is-loading')) return;
+    document.body.classList.remove('is-loading');
+    document.body.classList.add('no-webgl');
+    const l = document.getElementById('loader');
+    if (l) l.style.display = 'none';
+  }, 14000));
+</script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

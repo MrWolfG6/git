@@ -1,0 +1,10 @@
+{
+  "name": "meridian-autohaus",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A 3D Mercedes-Benz retail experience — Three.js, GSAP and ScrollTrigger.",
+  "scripts": {
+    "start": "npx --yes http-server . -p 5173 -c-1 -o",
+    "dev": "npx --yes http-server . -p 5173 -c-1 -o"
+  }
+}
