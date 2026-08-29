@@ -4,6 +4,8 @@
    ═══════════════════════════════════════════════════════════ */
 
 import { Stage } from './scene.js';
+import { Podium } from './showcase.js';
+import { CARS, LOGO } from './cars.js';
 
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $  = (s, c = document) => c.querySelector(s);
@@ -182,7 +184,7 @@ const SCENES = {
     look: { x: 0, y: 0.10, z: 0 },
     car:  { rotY: -0.95, x: 0, y: -0.35, tilt: 0.03 },
     fx:   { exposure: 0.8, bloom: 0.24, lights: 0.2, spin: 0.3, dust: 0.2 },
-    dim:  0.70
+    dim:  0.95
   },
   experience: {                      /* rear three-quarter, lights lit */
     cam:  { x: -4.35, y: 1.02, z: 3.75, fov: 35 },
@@ -287,37 +289,132 @@ function initCounters() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   7 · HORIZONTAL COLLECTION
+   7 · THE PODIUM
    ═══════════════════════════════════════════════════════════ */
-function initHorizontal() {
-  const section = $('#collection');
-  const track = $('#hscrollTrack');
-  if (!section || !track) return;
+function initShowcase() {
+  const root = $('#collection');
+  if (!root) return;
 
-  const distance = () => Math.max(0, track.scrollWidth - window.innerWidth);
+  /* the rail */
+  const rail = $('#scRail');
+  rail.innerHTML = CARS.map((c, i) => `
+    <button class="rail__item${i === 0 ? ' is-active' : ''}" data-i="${i}" role="tab"
+            aria-selected="${i === 0}"><em>${String(i + 1).padStart(2, '0')}</em><span>${c.short}</span></button>`).join('');
 
-  const tween = gsap.to(track, {
-    x: () => -distance(), ease: 'none',
-    scrollTrigger: {
-      trigger: section,
-      start: 'top top',
-      end: () => '+=' + (distance() + window.innerHeight * 0.6),
-      pin: true,
-      scrub: 1,
-      anticipatePin: 1,
-      invalidateOnRefresh: true
-    }
+  const podium = new Podium(root).init();
+  window.__podium = podium;
+
+  /* read-out */
+  const els = {
+    year: $('#scYear'), proto: $('#scProto'), name: $('#scName'), line: $('#scLine'),
+    specs: $('#scSpecs'), credit: $('#scCredit'), open: $('#scOpen'), drive: $('#scDrive'),
+    count: $('#pIndex')
+  };
+
+  root.addEventListener('podium:change', e => {
+    const { car, index } = e.detail;
+
+    els.count.textContent = String(index + 1).padStart(2, '0');
+    $$('.rail__item', rail).forEach((b, i) => {
+      b.classList.toggle('is-active', i === index);
+      b.setAttribute('aria-selected', String(i === index));
+    });
+
+    const panel = [els.year.parentElement, els.name, els.line, els.specs, els.credit];
+    gsap.timeline()
+      .to(panel, { y: -16, opacity: 0, duration: 0.3, stagger: 0.03, ease: 'power2.in' })
+      .add(() => {
+        els.year.textContent = car.year;
+        els.proto.textContent = car.line;
+        els.name.textContent = car.name;
+        els.line.textContent = car.blurb;
+        els.specs.innerHTML = car.specs.slice(0, 3)
+          .map(([k, v]) => `<li><em>${k}</em><span>${v}</span></li>`).join('');
+        els.credit.innerHTML =
+          `3D model <a href="${car.credit.modelUrl}" target="_blank" rel="noopener nofollow">${car.name}</a> ` +
+          `by <a href="${car.credit.authorUrl}" target="_blank" rel="noopener nofollow">${car.credit.author}</a> on Sketchfab.`;
+        els.open.href = `car.html?car=${car.id}`;
+        els.drive.href = `drive.html?car=${car.id}`;
+      })
+      .fromTo(panel, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, stagger: 0.05, ease: 'power3.out' });
   });
 
-  /* cards lean as they travel */
-  $$('.card', track).forEach(card => {
-    gsap.fromTo(card, { y: 60, opacity: 0.25 }, {
-      y: 0, opacity: 1, duration: 1, ease: 'power2.out',
-      scrollTrigger: {
-        trigger: card, containerAnimation: tween,
-        start: 'left 92%', end: 'left 55%', scrub: true
-      }
-    });
+  /* only run the stage while it is on screen, and only load on approach */
+  ScrollTrigger.create({
+    trigger: root, start: 'top bottom+=40%', end: 'bottom top-=40%',
+    onEnter: () => { podium.visible = true; if (!podium.started) { podium.started = true; podium.show(0); } },
+    onEnterBack: () => { podium.visible = true; },
+    onLeave: () => { podium.visible = false; },
+    onLeaveBack: () => { podium.visible = false; }
+  });
+
+  $('#pPrev').addEventListener('click', () => podium.prev());
+  $('#pNext').addEventListener('click', () => podium.next());
+  rail.addEventListener('click', e => {
+    const b = e.target.closest('.rail__item');
+    if (b) podium.show(+b.dataset.i);
+  });
+
+  addEventListener('keydown', e => {
+    if (!podium.visible) return;
+    if (e.key === 'ArrowLeft') podium.prev();
+    if (e.key === 'ArrowRight') podium.next();
+  });
+
+  /* swipe the stage on touch */
+  let x0 = null;
+  const stage = $('#podium');
+  stage.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 55) (dx < 0 ? podium.next() : podium.prev());
+    x0 = null;
+  }, { passive: true });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   7b · THE MARQUE
+   The 3D star in the hero is the Sketchfab logo model. If the
+   viewer cannot be reached the drawn mark behind it stays put.
+   ═══════════════════════════════════════════════════════════ */
+function initLogo3d() {
+  const host = $('#logo3d');
+  if (!host || REDUCED) return;
+
+  const mount = () => {
+    if (!window.Sketchfab) return;
+    const frame = document.createElement('iframe');
+    frame.title = 'Mercedes-Benz Logo';
+    frame.setAttribute('allow', 'autoplay; fullscreen; xr-spatial-tracking');
+    frame.setAttribute('execution-while-out-of-viewport', '');
+    frame.setAttribute('execution-while-not-rendered', '');
+    host.appendChild(frame);
+    try {
+      new window.Sketchfab(frame).init(LOGO.sketchfab, {
+        transparent: 1, autostart: 1, preload: 1, dnt: 1, autospin: 0.35,
+        ui_infos: 0, ui_controls: 0, ui_stop: 0, ui_help: 0, ui_hint: 0,
+        ui_settings: 0, ui_inspector: 0, ui_annotations: 0, ui_ar: 0, ui_vr: 0,
+        ui_fullscreen: 0, ui_watermark: 0, ui_theme: 'dark', scrollwheel: 0,
+        success: api => {
+          api.start();
+          api.addEventListener('viewerready', () => host.classList.add('is-live'));
+        },
+        error: () => frame.remove()
+      });
+    } catch (e) { frame.remove(); }
+  };
+
+  const s = document.createElement('script');
+  s.src = 'https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js';
+  s.async = true;
+  s.onload = mount;
+  document.head.appendChild(s);
+
+  /* it drifts away with the rest of the hero */
+  gsap.to(host, {
+    y: -140, opacity: 0, ease: 'none',
+    scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom 30%', scrub: 0.8 }
   });
 }
 
@@ -500,7 +597,8 @@ async function boot() {
   initChoreography(stage);
   initReveals();
   initCounters();
-  initHorizontal();
+  initShowcase();
+  initLogo3d();
   initMarquee();
   initConfigurator(stage);
   initNav();

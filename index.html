@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/showcase.css" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='none' stroke='white' stroke-width='6'/><path d='M50 50 L50 6 M50 50 L12 72 M50 50 L88 72' stroke='white' stroke-width='6' fill='none'/></svg>" />
 </head>
 <body class="is-loading">
@@ -104,6 +105,12 @@
       <div class="hero__actions" data-reveal="fade">
         <a href="#collection" class="btn btn--fill" data-magnetic><span>View the Collection</span></a>
         <a href="#configure" class="btn btn--ghost" data-magnetic><span>Configure Yours</span></a>
+      </div>
+    </div>
+
+    <div class="logo3d" id="logo3d" aria-hidden="true">
+      <div class="logo3d__fallback">
+        <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M50 50 L50 8 M50 50 L14 71 M50 50 L86 71" stroke="currentColor" stroke-width="2.5" fill="none"/></svg>
       </div>
     </div>
 
@@ -261,71 +268,38 @@
     </div>
   </section>
 
-  <!-- ══════════════════ COLLECTION ══════════════════ -->
-  <section class="section collection" id="collection" data-scene="collection">
-    <div class="collection__intro wrap">
+  <!-- ══════════════════ COLLECTION — THE PODIUM ══════════════════ -->
+  <section class="section showcase" id="collection" data-scene="collection">
+    <div class="wrap showcase__head">
       <p class="tag" data-reveal="fade"><i>05</i> Collection</p>
       <h2 class="h2">
-        <span class="line" data-reveal="line">In the room,</span>
+        <span class="line" data-reveal="line">On the podium,</span>
         <span class="line line--italic" data-reveal="line">right now.</span>
       </h2>
     </div>
 
-    <div class="hscroll" id="hscroll">
-      <div class="hscroll__track" id="hscrollTrack">
-        <article class="card" style="--g1:#1a1d21;--g2:#050506">
-          <div class="card__no">S 580</div>
-          <div class="card__body">
-            <h3>S-Class Saloon</h3>
-            <p>The reference point. Rear-axle steering, executive rear cabin, MBUX with augmented navigation.</p>
-            <ul><li>4.0 V8 · 503 hp</li><li>Nappa · Open-pore walnut</li><li>Delivery mileage</li></ul>
-          </div>
-          <div class="card__foot"><em>From £119,400</em><span>Enquire</span></div>
-        </article>
-        <article class="card" style="--g1:#241417;--g2:#070406">
-          <div class="card__no">AMG GT</div>
-          <div class="card__body">
-            <h3>AMG GT 63 S</h3>
-            <p>Affalterbach's front-mid V8, hand-assembled, with rear-biased 4MATIC+ and active aero.</p>
-            <ul><li>4.0 V8 Biturbo · 831 hp</li><li>0—100 in 2.9s</li><li>Carbon ceramic</li></ul>
-          </div>
-          <div class="card__foot"><em>From £165,900</em><span>Enquire</span></div>
-        </article>
-        <article class="card" style="--g1:#0f1c24;--g2:#040709">
-          <div class="card__no">EQS</div>
-          <div class="card__body">
-            <h3>EQS 580 4MATIC</h3>
-            <p>Silence, engineered. The Hyperscreen spans the dash; the drag coefficient is the lowest in production.</p>
-            <ul><li>Dual motor · 516 hp</li><li>Up to 770 km range</li><li>0.20 Cd</li></ul>
-          </div>
-          <div class="card__foot"><em>From £127,300</em><span>Enquire</span></div>
-        </article>
-        <article class="card" style="--g1:#1d1a13;--g2:#060504">
-          <div class="card__no">G 63</div>
-          <div class="card__body">
-            <h3>G-Class AMG</h3>
-            <p>Three differential locks and a ladder frame, dressed for Mayfair. Unchanged where it matters since 1979.</p>
-            <ul><li>4.0 V8 Biturbo · 585 hp</li><li>Three locking diffs</li><li>Manufaktur interior</li></ul>
-          </div>
-          <div class="card__foot"><em>From £182,750</em><span>Enquire</span></div>
-        </article>
-        <article class="card" style="--g1:#191622;--g2:#050407">
-          <div class="card__no">MAYBACH</div>
-          <div class="card__body">
-            <h3>Mercedes-Maybach S 680</h3>
-            <p>Two-tone by hand, executive rear seats with calf massage, and a champagne cooler between them.</p>
-            <ul><li>6.0 V12 · 612 hp</li><li>Chauffeur package</li><li>Bespoke two-tone</li></ul>
-          </div>
-          <div class="card__foot"><em>From £198,500</em><span>Enquire</span></div>
-        </article>
-        <article class="card card--cta" style="--g1:#101012;--g2:#000">
-          <div class="card__body">
-            <h3>Sourcing something specific?</h3>
-            <p>Our acquisition desk works a network of eleven European retailers and private collections. Tell us the specification and we will find it.</p>
-          </div>
-          <div class="card__foot"><em>Bespoke sourcing</em><span>Start a search</span></div>
-        </article>
+    <div class="podium" id="podium">
+      <canvas id="podiumCanvas"></canvas>
+      <div class="podium__slot" id="podiumModel"></div>
+      <div class="podium__status" id="podiumStatus"><i></i><span>Raising the car</span></div>
+      <button class="podium__arrow podium__arrow--prev" id="pPrev" aria-label="Previous car"><svg viewBox="0 0 24 24"><path d="M15 4 L7 12 L15 20" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+      <button class="podium__arrow podium__arrow--next" id="pNext" aria-label="Next car"><svg viewBox="0 0 24 24"><path d="M9 4 L17 12 L9 20" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+      <div class="podium__count"><em id="pIndex">01</em><span>/ 08</span></div>
+    </div>
+
+    <div class="wrap showcase__foot">
+      <div class="showcase__info">
+        <p class="showcase__year"><span id="scYear">2022</span> · <span id="scProto">Saloon</span></p>
+        <h3 class="showcase__name" id="scName">Mercedes-Maybach S 680</h3>
+        <p class="showcase__line" id="scLine"></p>
+        <ul class="showcase__specs" id="scSpecs"></ul>
+        <div class="showcase__actions">
+          <a class="btn btn--fill" id="scOpen" href="car.html?car=maybach" data-magnetic><span>Open this car</span></a>
+          <a class="btn btn--ghost" id="scDrive" href="drive.html?car=maybach" data-magnetic><span>Test drive</span></a>
+        </div>
+        <p class="showcase__credit" id="scCredit"></p>
       </div>
+      <div class="showcase__rail" id="scRail" role="tablist" aria-label="The collection"></div>
     </div>
   </section>
 

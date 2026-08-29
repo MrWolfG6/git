@@ -331,11 +331,8 @@ export class Stage {
       add(new THREE.BoxGeometry(3.5, 0.014, 0.010), M.darkChrome, -0.10, 0.665, s * 0.966);
     }
 
-    /* ── A monumental star far upstage, as a backdrop ── */
-    this.backdropStar = this.buildStar(3.1);
-    this.backdropStar.position.set(0, 2.7, -19);
-    this.backdropStar.traverse(o => { if (o.isMesh) { o.material = M.darkChrome; o.castShadow = false; } });
-    this.world.add(this.backdropStar);
+    /* The 3D marque is no longer drawn here — the Sketchfab logo
+       model carries it, mounted over the hero in the DOM. */
   }
 
   extrude(shape, depth, bevel) {
@@ -663,10 +660,6 @@ export class Stage {
     if (this.dust) {
       this.dust.rotation.y = t * 0.012;
       this.dust.material.opacity = 0.1 + this.fx.dust * 0.36;
-    }
-    if (this.backdropStar) {
-      this.backdropStar.rotation.y = Math.sin(t * 0.09) * 0.4;
-      this.backdropStar.rotation.z = t * 0.024;
     }
 
     this.renderer.toneMappingExposure += (this.fx.exposure - this.renderer.toneMappingExposure) * k;
