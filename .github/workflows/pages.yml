@@ -35,11 +35,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure Pages
-        # enablement turns Pages on the first time this runs, so there is
-        # no manual step in repository settings
+        # No `enablement: true` here. Creating the Pages site needs a
+        # permission GitHub deliberately withholds from the workflow
+        # token, so it must be turned on once by hand:
+        #   Settings -> Pages -> Build and deployment -> Source:
+        #   "GitHub Actions"
+        # After that this step just reads the existing configuration and
+        # every push to this branch deploys on its own.
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload the site
         uses: actions/upload-pages-artifact@v3
