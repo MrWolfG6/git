@@ -196,7 +196,7 @@ function showIntro() {
     const b = e.target.closest('[data-world]');
     if (!b || b.dataset.world === worldId) return;
     const t = S.nightTarget >= 0.5 ? 'night' : 'day';
-    location.href = `drive.html?car=${car.id}&world=${b.dataset.world}&time=${t}`;
+    location.href = `${location.pathname}?car=${car.id}&world=${b.dataset.world}&time=${t}`;
   });
 
   const lapBox = $('#introLaps');
