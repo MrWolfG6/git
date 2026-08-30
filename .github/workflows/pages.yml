@@ -1,0 +1,51 @@
+# Publishes the site to GitHub Pages.
+#
+# Everything here is static — no build step — so the repository root is
+# uploaded as-is. Paths in the pages are all relative, which is what lets
+# the site work from a project subpath (…github.io/git/) rather than a
+# domain root.
+
+name: Deploy site to Pages
+
+on:
+  push:
+    branches:
+      - claude/mercedes-3d-portfolio-threejs-bdncxr
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; queue them instead of cancelling, so the
+# last push is always the one that ends up live.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        # enablement turns Pages on the first time this runs, so there is
+        # no manual step in repository settings
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
