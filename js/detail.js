@@ -102,8 +102,53 @@ function initStage() {
 }
 
 /* ───────────────────── the configurator ────────────────────── */
+/* what each option adds, so the summary is not decorative */
+const WHEEL_OPTIONS = {
+  chrome: { label: 'Polished cross-spoke', add: 0 },
+  dark:   { label: 'Matt black forged', add: 3400 },
+  race:   { label: 'Centre-lock race', add: 6900 }
+};
+const CALIPER_OPTIONS = {
+  '#8d0f14': { label: 'Signal red', add: 0 },
+  '#c9a227': { label: 'Gold', add: 890 },
+  '#1c1f22': { label: 'Anthracite', add: 640 },
+  '#d8dde2': { label: 'Silver', add: 640 }
+};
+
+const build = { paint: null, wheels: 'chrome', caliper: '#8d0f14' };
+
+function basePrice() {
+  const n = parseInt(String(car.price).replace(/[^0-9]/g, ''), 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function renderBuild() {
+  $('#bModel').textContent = car.short;
+  $('#bPaint').textContent = build.paint ? build.paint.name : car.paints[0].name;
+  $('#bWheels').textContent = WHEEL_OPTIONS[build.wheels].label;
+  $('#bCal').textContent = CALIPER_OPTIONS[build.caliper].label;
+
+  const base = basePrice();
+  const el = $('#bTotal');
+  if (base == null) {
+    el.textContent = car.price;               // "On application", "Not for sale"
+    return;
+  }
+  const total = base + WHEEL_OPTIONS[build.wheels].add + CALIPER_OPTIONS[build.caliper].add;
+  const from = parseInt(el.dataset.v || String(base), 10);
+  el.dataset.v = String(total);
+  gsap.to({ v: from }, {
+    v: total, duration: 0.7, ease: 'power2.out',
+    onUpdate() {
+      el.textContent = '£' + Math.round(this.targets()[0].v).toLocaleString('en-GB');
+    }
+  });
+}
+
 function initConfigurator(podium) {
   const swatches = $$('#dPaints .swatch');
+  build.paint = car.paints[0];
+  renderBuild();
 
   swatches.forEach(btn => btn.addEventListener('click', () => {
     if (btn.classList.contains('is-active')) return;
@@ -111,6 +156,8 @@ function initConfigurator(podium) {
     btn.classList.add('is-active');
 
     const paint = car.paints[+btn.dataset.i];
+    build.paint = paint;
+    renderBuild();
     podium.setPaint(car.id, paint);
     podium.setSketchfabPaint(paint);
 
@@ -132,6 +179,8 @@ function initConfigurator(podium) {
     if (!rec) return;
     const M = rec.materials;
     const look = b.dataset.wheel;
+    build.wheels = look;
+    renderBuild();
     const c = look === 'dark' ? 0x1a1c1f : look === 'race' ? 0x3a3f45 : 0xc9d1d9;
     gsap.to(M.chrome.color, { r: ((c >> 16) & 255) / 255, g: ((c >> 8) & 255) / 255, b: (c & 255) / 255, duration: 0.7 });
     gsap.to(M.chrome, { roughness: look === 'dark' ? 0.5 : look === 'race' ? 0.32 : 0.10, duration: 0.7 });
@@ -141,6 +190,8 @@ function initConfigurator(podium) {
   $$('#dCalipers .opt').forEach(b => b.addEventListener('click', () => {
     $$('#dCalipers .opt').forEach(o => o.classList.remove('is-active'));
     b.classList.add('is-active');
+    build.caliper = b.dataset.cal;
+    renderBuild();
     const rec = podium.cars.get(car.id);
     if (!rec) return;
     const col = new THREE.Color(b.dataset.cal);

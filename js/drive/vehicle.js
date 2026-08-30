@@ -48,6 +48,12 @@ export class Vehicle {
     this.topSpeed = this.tuning.topSpeed / 3.6;
     this.wheelbase = this.dims.wheelbase;
 
+    /* the rear contact patches, in world space. They exist from the
+       start: the grid hold returns before the driving path sets them,
+       and the effects layer reads them every frame. */
+    this.contactL = new THREE.Vector3();
+    this.contactR = new THREE.Vector3();
+
     this.buildHeadlights();
     this.placeOnGrid(0);
   }
@@ -85,6 +91,14 @@ export class Vehicle {
     this.u = u;
     this.model.position.copy(this.pos);
     this.model.rotation.y = this.heading - Math.PI / 2;
+    this.updateContacts();
+  }
+
+  updateContacts() {
+    const fwd = new THREE.Vector3(Math.sin(this.heading), 0, Math.cos(this.heading));
+    const side = new THREE.Vector3(fwd.z, 0, -fwd.x);
+    this.contactL.copy(this.pos).addScaledVector(fwd, this.dims.axleR).addScaledVector(side, this.dims.trackZ);
+    this.contactR.copy(this.pos).addScaledVector(fwd, this.dims.axleR).addScaledVector(side, -this.dims.trackZ);
   }
 
   get kmh() { return Math.abs(this.speed) * 3.6; }
@@ -98,10 +112,11 @@ export class Vehicle {
     /* held on the grid: the car must sit still, not creep backwards
        because something is standing on the brake */
     if (locked) {
-      this.speed = 0; this.lateral = 0;
+      this.speed = 0; this.lateral = 0; this.slip = 0;
       this.rpm += ((this.car.audio.idle * (1 + input.throttle * 1.6)) - this.rpm) * Math.min(1, dt * 6);
       this.model.position.copy(this.pos);
       this.model.rotation.set(0, this.heading - Math.PI / 2, 0);
+      this.updateContacts();
       return;
     }
     const T = this.tuning;
@@ -120,7 +135,8 @@ export class Vehicle {
     const roll = 0.42 * Math.sign(v);
     const rough = this.offTrack > 0 ? Math.sign(v) * 7.5 * this.offTrack : 0;
 
-    let a = drive - braking - drag - roll - rough;
+    const cut = this.onLimiter ? (0.45 + 0.55 * (Math.sin(performance.now() * 0.06) * 0.5 + 0.5)) : 1;
+    let a = drive * cut - braking - drag - roll - rough;
 
     /* reverse when you keep braking at a standstill */
     if (input.brake > 0.2 && v < 0.6 && v > -this.topSpeed * 0.12) a = -6 * input.brake;
@@ -160,17 +176,37 @@ export class Vehicle {
     const edge = this.world.width / 2 + 0.6;
     this.offTrack = near.dist > edge ? Math.min(1, (near.dist - edge) / 7) : 0;
 
-    /* a soft wall well outside the verge, so you can never be lost */
+    /* A limit well outside the verge, so you can never be lost. It used
+       to clamp and scrub speed every frame, which pinned you against an
+       invisible wall with no way to read what had happened. Now it hits
+       once, hard, and then lets you drive away from it. */
     const hardEdge = this.world.width / 2 + 26;
+    this.wallHit = 0;
     if (near.dist > hardEdge) {
       const f = this.world.frameAt(this.u);
       const push = this.pos.clone().sub(f.pos).setY(0).normalize();
       this.pos.copy(f.pos).addScaledVector(push, hardEdge).setY(0);
-      this.speed *= 0.55;
+
+      /* only the component driving into the wall is lost */
+      const into = fwd.dot(push);
+      if (into > 0) {
+        this.wallHit = Math.min(1, Math.abs(this.speed) * into / 30);
+        this.speed *= 1 - 0.45 * into;
+        this.lateral = 0;
+      }
     }
 
     /* gearbox */
     this.updateGears(dt, input);
+
+    /* how far past the limit the tyres are, for smoke and marks */
+    this.slip = THREE.MathUtils.clamp(
+      Math.abs(this.lateral) / 3.4 +
+      (input.handbrake > 0.5 && absV > 4 ? 0.75 : 0) +
+      (input.throttle > 0.9 && absV < this.topSpeed * 0.10 && this.gear === 1 ? 0.5 : 0) +
+      this.offTrack * 0.8, 0, 1.6);
+
+    this.updateContacts();
 
     /* what the eye sees: roll into the corner, squat and dive */
     const latG = THREE.MathUtils.clamp(yaw * this.speed / 9.81, -1.4, 1.4);
@@ -181,6 +217,11 @@ export class Vehicle {
     this.model.rotation.set(this.bodyPitch, this.heading - Math.PI / 2, this.bodyRoll);
 
     /* wheels: roll, and turn the fronts */
+    /* the heading the road wants, so the HUD and anything watching can
+       tell how far out of shape the car is */
+    const trackFrame = this.world.frameAt(this.u);
+    this.trackHeading = Math.atan2(trackFrame.tan.x, trackFrame.tan.z);
+
     this.wheelAngle -= (this.speed / Math.max(0.2, this.proto.wheelR)) * dt;
     const wheels = this.parts.wheels;
     for (let i = 0; i < wheels.length; i++) {
@@ -202,10 +243,17 @@ export class Vehicle {
     this.rpm += (targetRpm - this.rpm) * Math.min(1, dt * 7);
 
     this.shiftHold = Math.max(0, (this.shiftHold || 0) - dt);
+    this.shiftFlash = Math.max(0, (this.shiftFlash || 0) - dt * 2.6);
     if (!this.shiftHold) {
-      if (through > 1.0 && this.gear < GEAR_TOP.length) { this.gear++; this.shiftHold = 0.34; this.justShifted = 1; }
-      else if (through < 0.05 && this.gear > 1) { this.gear--; this.shiftHold = 0.3; }
+      if (through > 1.0 && this.gear < GEAR_TOP.length) {
+        this.gear++; this.shiftHold = 0.34; this.justShifted = 1; this.shiftFlash = 1;
+      } else if (through < 0.05 && this.gear > 1) { this.gear--; this.shiftHold = 0.3; }
     }
+
+    /* in top gear there is nowhere left to go: the limiter bounces */
+    this.onLimiter = this.gear >= GEAR_TOP.length && through > 0.985;
+    if (this.onLimiter) this.rpm = A.redline * (0.965 + Math.sin(performance.now() * 0.06) * 0.03);
+
     this.reverse = this.speed < -0.5;
   }
 

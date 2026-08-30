@@ -13,6 +13,7 @@
 
 import * as THREE from 'three';
 import { buildCarModel, makeMaterials } from './carbuilder.js';
+import { Reflector } from 'three/addons/objects/Reflector.js';
 import { CARS } from './cars.js';
 
 const VIEWER_API = 'https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js';
@@ -124,13 +125,29 @@ export class Podium {
     body.receiveShadow = true;
     g.add(body);
 
-    /* the polished top the car stands on */
+    /* The top the car stands on. A plain metallic disc only ever
+       reflected the environment; a Reflector puts the car itself in it,
+       which is the whole point of standing something on polished stone. */
+    if (this.quality !== 'low') {
+      const mirror = new Reflector(new THREE.CircleGeometry(3.5, 72), {
+        textureWidth: 1024, textureHeight: 1024, color: 0x141619, clipBias: 0.004
+      });
+      mirror.rotation.x = -Math.PI / 2;
+      mirror.position.y = DAIS_TOP + 0.001;
+      g.add(mirror);
+      this.mirror = mirror;
+    }
+
+    /* smoked glass over it, so the reflection stays a suggestion */
     const top = new THREE.Mesh(
       new THREE.CircleGeometry(3.5, 72),
-      new THREE.MeshStandardMaterial({ color: 0x0c0e11, metalness: 0.9, roughness: 0.30, envMapIntensity: 0.42 })
+      new THREE.MeshStandardMaterial({
+        color: 0x090b0e, metalness: 0.7, roughness: 0.34, envMapIntensity: 0.30,
+        transparent: this.quality !== 'low', opacity: this.quality === 'low' ? 1 : 0.74
+      })
     );
     top.rotation.x = -Math.PI / 2;
-    top.position.y = DAIS_TOP + 0.001;
+    top.position.y = DAIS_TOP + 0.002;
     top.receiveShadow = true;
     g.add(top);
 

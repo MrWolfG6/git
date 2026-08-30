@@ -14,6 +14,7 @@ import { World } from './world.js';
 import { Vehicle, CameraRig, VIEW_LABELS } from './vehicle.js';
 import { AIField } from './ai.js';
 import { EngineAudio } from './audio.js';
+import { Particles, Skids } from './particles.js';
 
 /* GSAP smooths its clock over long frames, which would stall anything
    the simulation depends on. Here real time is the only time. */
@@ -27,6 +28,8 @@ const params = new URLSearchParams(location.search);
 const car = BY_ID[params.get('car')] || CARS[0];
 let worldId = WORLDS[params.get('world')] ? params.get('world') : car.drive.world;
 let startNight = params.get('time') === 'night';
+const LAP_CHOICES = [1, 3, 5, 10];
+let laps = LAP_CHOICES.includes(+params.get('laps')) ? +params.get('laps') : 3;
 
 const quality = (() => {
   const w = innerWidth, mem = navigator.deviceMemory || 8;
@@ -40,7 +43,8 @@ const S = {
   night: startNight ? 1 : 0, nightTarget: startNight ? 1 : 0,
   raceState: 'idle', countdown: 0,
   lapStart: 0, best: null, lastLap: null, lap: 1, elapsed: 0,
-  muted: false, hintTimer: 0
+  muted: false, hintTimer: 0,
+  totalLaps: laps, finished: false, lapTimes: []
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -97,7 +101,7 @@ function bindTouch() {
 /* ═══════════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════════ */
-let renderer, scene, camera, composer, bloom, world, vehicle, rig, field, audio;
+let renderer, scene, camera, composer, bloom, world, vehicle, rig, field, audio, dust, skids;
 const clock = new THREE.Clock();
 
 function setProgress(pct, label) {
@@ -140,6 +144,12 @@ async function build() {
 
   setProgress(70, worldId === 'circuit' ? 'Assembling the grid' : 'Letting the traffic out'); await frame();
   field = new AIField(world, worldId === 'circuit' ? 'race' : 'traffic', quality).build(scene);
+
+  if (quality !== 'low') {
+    dust = new Particles(scene, quality === 'high' ? 340 : 200);
+    skids = new Skids(scene, quality === 'high' ? 280 : 160);
+  }
+  buildMinimap();
 
   setProgress(86, 'Grading the image'); await frame();
   composer = new EffectComposer(renderer);
@@ -188,6 +198,22 @@ function showIntro() {
     const t = S.nightTarget >= 0.5 ? 'night' : 'day';
     location.href = `drive.html?car=${car.id}&world=${b.dataset.world}&time=${t}`;
   });
+
+  const lapBox = $('#introLaps');
+  if (worldId === 'circuit') {
+    lapBox.closest('.opt-group').hidden = false;
+    lapBox.innerHTML = LAP_CHOICES.map(n =>
+      `<button class="opt${n === S.totalLaps ? ' is-active' : ''}" data-laps="${n}">${n} lap${n > 1 ? 's' : ''}</button>`).join('');
+    lapBox.addEventListener('click', e => {
+      const b = e.target.closest('[data-laps]');
+      if (!b) return;
+      for (const o of lapBox.children) o.classList.remove('is-active');
+      b.classList.add('is-active');
+      S.totalLaps = +b.dataset.laps;
+    });
+  } else {
+    lapBox.closest('.opt-group').hidden = true;
+  }
 
   for (const b of document.querySelectorAll('#introTime .opt')) {
     b.classList.toggle('is-active', (b.dataset.time === 'night') === (S.nightTarget >= 0.5));
@@ -346,6 +372,82 @@ function applyNight(t, immediate) {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   MINIMAP
+   The route drawn once from the spline, with everyone's dot
+   moved along it each frame.
+   ═══════════════════════════════════════════════════════════ */
+let mapProject = null;
+
+function buildMinimap() {
+  const n = 220;
+  const pts = [];
+  for (let i = 0; i < n; i++) pts.push(world.curve.getPointAt(i / n));
+
+  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  for (const p of pts) {
+    minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+    minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z);
+  }
+  const pad = 9;
+  const span = Math.max(maxX - minX, maxZ - minZ) || 1;
+  const scale = (100 - pad * 2) / span;
+  const ox = pad + ((maxX - minX) < span ? (span - (maxX - minX)) * scale / 2 : 0);
+  const oz = pad + ((maxZ - minZ) < span ? (span - (maxZ - minZ)) * scale / 2 : 0);
+
+  mapProject = p => [ox + (p.x - minX) * scale, oz + (p.z - minZ) * scale];
+
+  const d = pts.map((p, i) => {
+    const [x, y] = mapProject(p);
+    return `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`;
+  }).join(' ') + ' Z';
+  $('#mapTrack').setAttribute('d', d);
+  $('#mapLine').setAttribute('d', d);
+
+  const [sx, sy] = mapProject(world.curve.getPointAt(0));
+  $('#mapStart').setAttribute('cx', sx);
+  $('#mapStart').setAttribute('cy', sy);
+
+  /* one dot per AI car */
+  $('#mapAI').innerHTML = field.cars.map(() =>
+    '<circle r="2" fill="rgba(255,255,255,.42)"/>').join('');
+  mapDots = [...$('#mapAI').children];
+}
+
+let mapDots = [];
+
+function updateMinimap() {
+  if (!mapProject) return;
+  const me = $('#mapMe');
+  const [mx, my] = mapProject(vehicle.pos);
+  me.setAttribute('cx', mx.toFixed(1));
+  me.setAttribute('cy', my.toFixed(1));
+  for (let i = 0; i < mapDots.length; i++) {
+    const c = field.cars[i];
+    if (!c.pos) continue;
+    const [x, y] = mapProject(c.pos);
+    mapDots[i].setAttribute('cx', x.toFixed(1));
+    mapDots[i].setAttribute('cy', y.toFixed(1));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOASTS
+   ═══════════════════════════════════════════════════════════ */
+let toastTl;
+function toast(title, body, best = false) {
+  const el = $('#toast');
+  el.hidden = false;
+  el.classList.toggle('is-best', best);
+  $('#toastTitle').textContent = title;
+  $('#toastBody').textContent = body;
+  toastTl?.kill();
+  toastTl = gsap.timeline()
+    .fromTo(el, { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' })
+    .to(el, { opacity: 0, y: -12, duration: 0.6, delay: 2.4, ease: 'power2.in' })
+    .set(el, { onComplete: () => { el.hidden = true; } });
+}
+
+/* ═══════════════════════════════════════════════════════════
    HUD
    ═══════════════════════════════════════════════════════════ */
 const DIAL_LEN = 434;   // path length of the arc, measured once below
@@ -375,13 +477,17 @@ function updateHud(dt) {
   const red = rev > 0.88;
   $('.dial').classList.toggle('is-red', red);
   $('.rev').classList.toggle('is-red', red);
+  $('.rev').classList.toggle('is-limit', vehicle.onLimiter);
+  $('.dial').classList.toggle('is-shift', vehicle.shiftFlash > 0);
+
+  updateMinimap();
 
   /* timing */
   if (S.raceState === 'racing' || S.raceState === 'free') {
     S.elapsed = performance.now() - S.lapStart;
     $('#tCur').textContent = fmtTime(S.elapsed);
   }
-  $('#tLap').textContent = worldId === 'circuit' ? `${S.lap} / 3` : S.lap;
+  $('#tLap').textContent = worldId === 'circuit' ? `${Math.min(S.lap, S.totalLaps)} / ${S.totalLaps}` : S.lap;
   $('#tBest').textContent = fmtTime(S.best);
 
   /* standings on the circuit */
@@ -401,16 +507,95 @@ function updateHud(dt) {
 
 function onLapComplete() {
   const t = performance.now() - S.lapStart;
+  let isBest = false;
   if (t > 8000) {
     S.lastLap = t;
-    if (S.best == null || t < S.best) {
-      S.best = t;
-      gsap.fromTo('#tBest', { color: '#7dffb0', scale: 1.18 }, { color: '#f4f5f6', scale: 1, duration: 1.1 });
-    }
+    S.lapTimes.push(t);
+    if (S.best == null || t < S.best) { S.best = t; isBest = true; }
+    if (isBest) gsap.fromTo('#tBest', { color: '#7dffb0', scale: 1.18 }, { color: '#f4f5f6', scale: 1, duration: 1.1 });
+    toast(isBest ? 'Personal best' : `Lap ${S.lap}`, fmtTime(t), isBest);
   }
   S.lapStart = performance.now();
   S.lap++;
   gsap.fromTo('#tLap', { scale: 1.4, color: '#fff' }, { scale: 1, color: '#f4f5f6', duration: 0.8 });
+
+  if (worldId === 'circuit' && S.lap > S.totalLaps && !S.finished) finishRace();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHEQUERED FLAG
+   ═══════════════════════════════════════════════════════════ */
+function finishRace() {
+  S.finished = true;
+  S.raceState = 'finished';
+
+  const rows = field.standings({ lap: S.lap - 1, u: vehicle.u, lane: 0, speed: vehicle.speed });
+  const place = rows.findIndex(r => r.isPlayer) + 1;
+  const ord = ['th', 'st', 'nd', 'rd'][(place % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][place] || 'th';
+
+  $('#resultPlace').innerHTML = `${place}<sup>${ord}</sup>`;
+  $('#resultSub').textContent = S.best
+    ? `${car.name} · best lap ${fmtTime(S.best)}`
+    : `${car.name} · ${WORLDS[worldId].name}`;
+  $('#resultTable').innerHTML = rows.map((r, i) =>
+    `<li class="${r.isPlayer ? 'is-you' : ''}"><b>${String(i + 1).padStart(2, '0')}</b>${r.name}` +
+    `<span>${r.isPlayer && S.best ? fmtTime(S.best) : ''}</span></li>`).join('');
+  $('#resultCar').href = `car.html?car=${car.id}`;
+
+  gsap.fromTo('#flash', { opacity: 0.35 }, { opacity: 0, duration: 0.8 });
+  $('#dResult').hidden = false;
+  gsap.fromTo('.dresult__panel', { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: 'expo.out' });
+  gsap.fromTo('.dresult__table li', { x: -18, opacity: 0 },
+    { x: 0, opacity: 1, duration: 0.6, stagger: 0.05, delay: 0.35 });
+  document.body.classList.remove('is-driving');
+  audio?.setVolume(0.28);
+}
+
+$('#resultAgain').addEventListener('click', () => location.reload());
+
+/* ═══════════════════════════════════════════════════════════
+   WHAT THE TYRES LEAVE BEHIND
+   ═══════════════════════════════════════════════════════════ */
+const DUST_COLOUR = {
+  chicago: new THREE.Color(0.72, 0.74, 0.78),
+  vegas:   new THREE.Color(0.82, 0.74, 0.58),
+  circuit: new THREE.Color(0.70, 0.72, 0.75)
+};
+let lastContact = null;
+
+function updateEffects(dt) {
+  if (!dust || !vehicle.contactL) return;
+  const slip = vehicle.slip || 0;
+  const kmh = vehicle.kmh;
+
+  /* smoke off the driven wheels, dust when you put a wheel off */
+  if (slip > 0.40 && kmh > 14) {
+    const colour = vehicle.offTrack > 0.1 ? DUST_COLOUR[worldId] : new THREE.Color(0.76, 0.76, 0.79);
+    const drift = { x: -Math.sin(vehicle.heading) * 1.6, z: -Math.cos(vehicle.heading) * 1.6 };
+    const n = slip > 0.9 ? 2 : 1;
+    for (let i = 0; i < n; i++) {
+      dust.emit(vehicle.contactL, 0.28, 0.34 + slip * 0.26, colour, drift, 1.1 + Math.random() * 0.7);
+      dust.emit(vehicle.contactR, 0.28, 0.34 + slip * 0.26, colour, drift, 1.1 + Math.random() * 0.7);
+    }
+  }
+  dust.update(dt);
+
+  /* rubber, only on the road and only when it is actually sliding */
+  if (skids) {
+    if (slip > 0.3 && kmh > 12 && vehicle.offTrack < 0.15 && lastContact) {
+      skids.lay(
+        { a: lastContact.l, b: vehicle.contactL },
+        { a: lastContact.r, b: vehicle.contactR },
+        Math.min(1, (slip - 0.3) * 1.5)
+      );
+    }
+    skids.fade(dt);
+  }
+  lastContact = { l: vehicle.contactL.clone(), r: vehicle.contactR.clone() };
+
+  /* the sense of speed: the frame closes in as the car gets on with it */
+  const v = Math.min(1, kmh / (car.drive.topSpeed * 0.92));
+  document.documentElement.style.setProperty('--speed', v.toFixed(3));
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -433,15 +618,28 @@ function loop() {
     readInput(dt);
     if (S.raceState === 'countdown') stepCountdown();
     const locked = S.raceState === 'countdown';
-    vehicle.update(dt, input, locked);
+    /* after the flag the car coasts in rather than stopping dead */
+    const drive = S.finished
+      ? { throttle: 0, brake: 0.25, steer: input.steer * 0.5, handbrake: 0 }
+      : input;
+    vehicle.update(dt, drive, locked);
     if (!locked) field.update(dt, { u: vehicle.u, lane: 0, speed: vehicle.speed, lap: S.lap - 1 });
-    const bump = field.collide(vehicle);
-    if (bump > 0.2) rig.shake = Math.max(rig.shake, bump);
+    const bump = Math.max(field.collide(vehicle), vehicle.wallHit || 0);
+    if (bump > 0.15) {
+      rig.shake = Math.max(rig.shake, bump);
+      if (dust && vehicle.contactL) {
+        const grey = new THREE.Color(0.72, 0.72, 0.74);
+        for (let i = 0; i < 3; i++) {
+          dust.emit(vehicle.contactL, 0.6, 0.5 + bump * 0.5, grey, { x: 0, z: 0 }, 1.1);
+        }
+      }
+    }
 
     /* crossing the line */
     if (lastU > 0.85 && vehicle.u < 0.15) onLapComplete();
     lastU = vehicle.u;
 
+    updateEffects(dt);
     vehicle.updateLights(input);
     audio?.update(dt, {
       rpm: vehicle.rpm, rpmNorm: vehicle.rpmNorm, throttle: input.throttle,
@@ -465,7 +663,7 @@ function loop() {
     kmh: vehicle.kmh, lap: S.lap, u: vehicle.u, off: vehicle.offTrack,
     gear: vehicle.gear, rpm: vehicle.rpm, view: rig.view, night: S.night,
     started: S.started, ai: field.cars.length, race: S.raceState,
-    throttle: input.throttle
+    throttle: input.throttle, heading: vehicle.heading, trackHeading: vehicle.trackHeading
   };
   world.followSun(vehicle.pos);
   updateHud(dt);

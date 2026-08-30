@@ -25,6 +25,7 @@ js/drive/world.js     three spline circuits, dressed and lit, day and night
 js/drive/vehicle.js   arcade vehicle model + the three-seat camera rig
 js/drive/ai.js        city traffic and the Grand Prix field
 js/drive/audio.js     the synthesised powertrain
+js/drive/particles.js tyre smoke, dust and skid marks
 js/drive/main.js      simulator boot, input, loop and HUD
 ```
 
@@ -115,6 +116,9 @@ runtime body genuinely emerges: a `THREE.Plane` clipping plane sits at the
 podium surface, so the car is cut off by the dais as it rises. The Sketchfab
 layer does the same, clipped in CSS at the same line.
 
+The dais is a `Reflector`, so the car is genuinely in its own reflection
+rather than the polished top only mirroring the environment.
+
 Arrows, a rail of all eight, keyboard ←/→ and swipe. The stage only renders
 while it is on screen, and only loads a model on approach.
 
@@ -123,7 +127,10 @@ while it is on screen, and only loads a model on approach.
 Full specification, highlights, and a configurator: paint (applied to the
 runtime body immediately, and pushed into the Sketchfab model through
 `setMaterial` where that model exposes a body material), wheel finish and
-caliper colour. Then three routes into the simulator.
+caliper colour. A running **build summary** totals the options as you pick
+them — and falls back to the car's own wording ("On application", "Not for
+sale") where there is no list price to add to. Then three routes into the
+simulator.
 
 ### The simulator (`drive.html`)
 
@@ -132,7 +139,13 @@ caliper colour. Then three routes into the simulator.
 - **Las Vegas** — the Strip: neon on both sides, palms, casino towers, desert.
 - **Grand Prix circuit** — kerbs, armco, grandstands, a start gantry and
   floodlights, with a full field of AI cars, a five-light start and live
-  timing. This is where the W14 belongs, and any car can run there.
+  timing. This is where the W14 belongs, and any car can run there. Pick
+  1, 3, 5 or 10 laps; the chequered flag brings up the **classification**
+  with your finishing position and best lap.
+
+The cities carry **two-way traffic** — roughly two cars in five are coming
+the other way, on their own side — plus bridges and sign gantries over the
+road so a straight has something passing overhead.
 
 All three are closed spline circuits, so the road, the AI pathing and the lap
 timing share one piece of maths and you can never reach an edge.
@@ -143,6 +156,15 @@ baked environment map at the midpoint.
 
 **Three seats** — chase, driver and passenger. The driver and passenger
 cameras sit behind the windscreen base looking out over the bonnet.
+
+**On the HUD** — a speed dial with a redline arc, gear and rev bar (which
+bounces on the limiter and flashes green on an upshift), lap and best-lap
+timing, live standings, and a **minimap** drawn from the route's own spline
+with every car on it.
+
+**What the tyres leave behind** — smoke when you break traction, dust when
+you put a wheel off, rubber laid down while the car is sliding, and a frame
+that closes in as speed builds.
 
 **Controls** — `W`/`↑` throttle, `S`/`↓` brake and reverse, `A`/`D` steer,
 `Space` handbrake, `C` seat, `N` time of day, `M` sound, `R` back to the road,
@@ -166,6 +188,7 @@ slower surface off the road.
 | Body shapes | `PROTOS` in `js/carbuilder.js` |
 | Route shapes and dressing | `ROUTES` / `PALETTE` in `js/drive/world.js` |
 | Engine voicing | `VOICES` in `js/drive/audio.js` |
+| Option prices on the car page | `WHEEL_OPTIONS` / `CALIPER_OPTIONS` in `js/detail.js` |
 
 The contact form has no backend — it validates and acknowledges in the page.
 Point it at your CRM before going live.

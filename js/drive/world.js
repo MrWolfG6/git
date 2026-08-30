@@ -414,8 +414,66 @@ export class World {
     heads.instanceMatrix.needsUpdate = true;
     this.group.add(poles, heads);
 
+    this.buildOverpasses();
     if (vegas) this.buildNeon();
     if (vegas) this.buildPalms();
+  }
+
+  /* bridges over the road, and the odd sign gantry — the things that
+     give a straight any sense of passing scale */
+  buildOverpasses() {
+    const hw = this.width / 2;
+    const deck = new THREE.MeshStandardMaterial({ color: 0x191c20, roughness: 0.9, metalness: 0.1 });
+    const pier = new THREE.MeshStandardMaterial({ color: 0x22262b, roughness: 0.95 });
+    const signFace = new THREE.MeshStandardMaterial({ color: 0x123a22, roughness: 0.8 });
+
+    const spots = this.quality === 'low' ? [0.16, 0.58] : [0.09, 0.30, 0.52, 0.74, 0.90];
+    spots.forEach((u, i) => {
+      const f = this.frameAt(u);
+      const yaw = Math.atan2(f.tan.x, f.tan.z);
+
+      if (i % 2 === 0) {
+        /* a bridge */
+        const g = new THREE.Group();
+        g.position.copy(f.pos).setY(0);
+        g.rotation.y = yaw;
+        const span = new THREE.Mesh(new THREE.BoxGeometry(9, 1.1, this.width + 34), deck);
+        span.position.y = 7.4;
+        span.castShadow = this.quality !== 'low';
+        g.add(span);
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(9, 0.9, 0.3), deck);
+        for (const s of [-1, 1]) {
+          const r = rail.clone();
+          r.position.set(0, 8.4, s * (this.width / 2 + 17));
+          g.add(r);
+        }
+        for (const s of [-1, 1]) {
+          const p = new THREE.Mesh(new THREE.BoxGeometry(7, 7.4, 3.4), pier);
+          p.position.set(0, 3.7, s * (hw + 6));
+          p.castShadow = p.receiveShadow = this.quality !== 'low';
+          g.add(p);
+        }
+        this.group.add(g);
+      } else {
+        /* a sign gantry */
+        const g = new THREE.Group();
+        g.position.copy(f.pos).setY(0);
+        g.rotation.y = yaw;
+        for (const s of [-1, 1]) {
+          const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 7.2, 8), pier);
+          leg.position.set(0, 3.6, s * (hw + 1.4));
+          g.add(leg);
+        }
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, this.width + 3), pier);
+        beam.position.y = 7.2;
+        g.add(beam);
+        const board = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.4, this.width * 0.62), signFace);
+        board.position.set(0.2, 5.9, 0);
+        g.add(board);
+        this.group.add(g);
+        this.emissives.push({ mat: signFace, day: 1, night: 1, colorDay: 0x123a22, colorNight: 0x0d2b19 });
+      }
+    });
   }
 
   windowTexture(vegas) {

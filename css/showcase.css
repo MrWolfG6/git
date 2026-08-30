@@ -4,7 +4,7 @@
 
 .showcase{
   display:flex;flex-direction:column;justify-content:center;
-  min-height:100vh;padding:clamp(76px,9vh,120px) 0 clamp(30px,4vh,56px);
+  min-height:100vh;padding:clamp(72px,8.5vh,112px) 0 clamp(26px,3.4vh,46px);
   overflow:hidden;
 }
 .showcase__head{margin-bottom:clamp(6px,1vw,16px);}
@@ -14,7 +14,7 @@
 .podium{
   position:relative;
   width:100%;
-  height:clamp(220px,30vh,340px);
+  height:clamp(214px,29vh,330px);
   margin:clamp(2px,.6vw,10px) 0 clamp(14px,2vw,26px);
 }
 #podiumCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
@@ -105,7 +105,7 @@
 .showcase__specs span{font-size:14px;font-weight:300;letter-spacing:-.01em;}
 .showcase__actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(18px,2.4vw,30px);}
 .showcase__credit{
-  margin:14px 0 0;font-size:9.5px;line-height:1.65;color:var(--steel);max-width:62ch;
+  margin:12px 0 0;font-size:9px;line-height:1.6;color:var(--steel);max-width:68ch;
 }
 .showcase__credit a{color:var(--silver);border-bottom:1px solid rgba(255,255,255,.18);}
 .showcase__credit a:hover{color:var(--white);}

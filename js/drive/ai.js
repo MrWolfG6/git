@@ -48,16 +48,20 @@ export class AIField {
       relink(model);                       // a clone loses its part references
       this.group.add(model);
 
+      /* in a city roughly half the traffic is coming the other way */
+      const dir = this.mode === 'race' ? 1 : (i % 5 < 2 ? -1 : 1);
+
       const car = {
-        model,
+        model, dir,
         name: this.mode === 'race' ? RACE_NAMES[i % RACE_NAMES.length] : null,
         /* the grid, or spread right around the loop for traffic */
         u: this.mode === 'race'
           ? (1 - 0.004 - i * 0.0055 + 1) % 1
           : (i + 0.5) / n,
+        /* traffic keeps to its own side; the racers use the whole road */
         lane: this.mode === 'race'
           ? (i % 2 ? 1 : -1) * this.world.width * 0.16
-          : ((i % 3) - 1) * this.world.width * 0.24,
+          : (i % 5 < 2 ? 1 : -1) * this.world.width * (i % 2 ? 0.12 : 0.30),
         targetLane: 0,
         speed: 0,
         top: this.mode === 'race'
@@ -125,13 +129,13 @@ export class AIField {
       c.lane += (c.targetLane - c.lane) * Math.min(1, dt * 1.6);
 
       c.lastU = c.u;
-      c.u = (c.u + (c.speed * dt) / L) % 1;
-      if (c.u < c.lastU - 0.5) c.lap++;
+      c.u = ((c.u + (c.speed * c.dir * dt) / L) % 1 + 1) % 1;
+      if (c.dir > 0 && c.u < c.lastU - 0.5) c.lap++;
 
       const f = this.world.frameAt(c.u);
       const pos = f.pos.clone().addScaledVector(f.side, c.lane);
       c.model.position.set(pos.x, 0, pos.z);
-      const heading = Math.atan2(f.tan.x, f.tan.z);
+      const heading = Math.atan2(f.tan.x, f.tan.z) + (c.dir < 0 ? Math.PI : 0);
       c.model.rotation.y = heading - Math.PI / 2;
       c.heading = heading;
       c.pos = pos;
@@ -141,7 +145,7 @@ export class AIField {
       const side = new THREE.Vector3(f.tan.z, 0, -f.tan.x);
       const dir = Math.sign(side.dot(f.side)) || 1;
       c.model.rotation.z = -lean * 0.035 * dir;
-      c.wheelAngle -= (c.speed / 0.36) * dt;
+      c.wheelAngle -= (c.speed / 0.36) * dt * c.dir;
       const wheels = c.model.parts?.wheels;
       if (wheels) for (const w of wheels) if (w.spin) w.spin.rotation.z = c.wheelAngle;
     }
@@ -153,18 +157,21 @@ export class AIField {
     const L = this.world.length;
     let best = { gap: Infinity, speed: 999, lane: 0 };
 
+    /* "ahead" is whichever way this car happens to be pointing */
     const consider = (u, speed, lane) => {
-      let d = ((u - me.u) % 1 + 1) % 1 * L;
+      const raw = me.dir > 0 ? (u - me.u) : (me.u - u);
+      const d = ((raw % 1) + 1) % 1 * L;
       if (d < best.gap) best = { gap: d, speed, lane };
     };
 
     for (let j = 0; j < this.cars.length; j++) {
       if (j === index) continue;
       const o = this.cars[j];
+      if (o.dir !== me.dir) continue;                 // oncoming is not a queue
       if (Math.abs(o.lane - me.lane) > 3.2) continue;
       consider(o.u, o.speed, o.lane);
     }
-    if (player && Math.abs(player.lane - me.lane) < 3.2) {
+    if (player && me.dir > 0 && Math.abs(player.lane - me.lane) < 3.2) {
       consider(player.u, Math.abs(player.speed), player.lane);
     }
     return best;
@@ -172,7 +179,8 @@ export class AIField {
 
   /* the race order: laps first, then distance round the current lap */
   standings(player) {
-    const rows = this.cars.map(c => ({ name: c.name, lap: c.lap, u: c.u, isPlayer: false }));
+    const rows = this.cars.filter(c => c.name)
+      .map(c => ({ name: c.name, lap: c.lap, u: c.u, isPlayer: false }));
     if (player) rows.push({ name: 'YOU', lap: player.lap, u: player.u, isPlayer: true });
     rows.sort((a, b) => (b.lap - a.lap) || (b.u - a.u));
     return rows;

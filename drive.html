@@ -66,10 +66,14 @@
       </div>
     </div>
 
-    <div class="dintro__opts">
+    <div class="dintro__opts dintro__opts--three">
       <div class="opt-group">
         <p class="opt-label">Where</p>
         <div class="opts" id="introWorlds"></div>
+      </div>
+      <div class="opt-group" hidden>
+        <p class="opt-label">Race length</p>
+        <div class="opts" id="introLaps"></div>
       </div>
       <div class="opt-group">
         <p class="opt-label">Time of day</p>
@@ -96,6 +100,16 @@
       <em id="hudCar">—</em>
       <span id="hudWhere">—</span>
     </div>
+  </div>
+
+  <div class="hud__map" id="hudMap">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <path id="mapTrack" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path id="mapLine" fill="none" stroke="rgba(255,255,255,.62)" stroke-width="1" stroke-dasharray="2.5 3.5"/>
+      <g id="mapAI"></g>
+      <circle id="mapMe" r="3.1" fill="#fff"/>
+      <circle id="mapStart" r="1.6" fill="none" stroke="#ff3b30" stroke-width="1.2"/>
+    </svg>
   </div>
 
   <div class="hud__tr">
@@ -131,6 +145,8 @@
 
   <div class="hud__hint" id="hint">W to pull away · C to change seat · N for night</div>
 
+  <div class="toast" id="toast" hidden><em id="toastTitle"></em><span id="toastBody"></span></div>
+
   <!-- race start lights -->
   <div class="lights" id="lights" hidden><i></i><i></i><i></i><i></i><i></i></div>
   <div class="flash" id="flash" aria-hidden="true"></div>
@@ -141,6 +157,21 @@
     <button class="touch__pad touch__pad--r" data-key="right" aria-label="Right"></button>
     <button class="touch__pedal touch__pedal--brake" data-key="brake">BRAKE</button>
     <button class="touch__pedal touch__pedal--gas" data-key="throttle">GO</button>
+  </div>
+</div>
+
+<!-- ═══════════ CHEQUERED FLAG ═══════════ -->
+<div class="dresult" id="dResult" hidden>
+  <div class="dresult__panel">
+    <p class="dintro__eyebrow" id="resultEyebrow">Race complete</p>
+    <h2 class="dresult__place" id="resultPlace">—</h2>
+    <p class="dresult__sub" id="resultSub">—</p>
+    <ol class="dresult__table" id="resultTable"></ol>
+    <div class="dresult__actions">
+      <button class="btn btn--fill" id="resultAgain"><span>Race again</span></button>
+      <a class="btn btn--ghost" id="resultCar" href="#"><span>Car details</span></a>
+      <a class="btn btn--ghost" href="index.html#collection"><span>The collection</span></a>
+    </div>
   </div>
 </div>
 
