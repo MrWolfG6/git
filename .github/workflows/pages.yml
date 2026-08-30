@@ -10,7 +10,7 @@ name: Deploy site to Pages
 on:
   push:
     branches:
-      - claude/mercedes-3d-portfolio-threejs-bdncxr
+      - main
   workflow_dispatch:
 
 permissions:
@@ -35,13 +35,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Configure Pages
-        # No `enablement: true` here. Creating the Pages site needs a
-        # permission GitHub deliberately withholds from the workflow
-        # token, so it must be turned on once by hand:
-        #   Settings -> Pages -> Build and deployment -> Source:
-        #   "GitHub Actions"
-        # After that this step just reads the existing configuration and
-        # every push to this branch deploys on its own.
+        # Two things had to be set up by hand once, and neither can be
+        # done from a workflow:
+        #   1. Settings -> Pages -> Source: "GitHub Actions". Creating
+        #      the Pages site is a permission GitHub withholds from the
+        #      workflow token.
+        #   2. This deploys from the default branch, because the
+        #      github-pages environment only accepts the default branch
+        #      unless its deployment-branch policy is widened.
         uses: actions/configure-pages@v5
 
       - name: Upload the site
