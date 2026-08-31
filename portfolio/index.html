@@ -1,0 +1,816 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;600;800&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* ===========================================================
+   TOKENS — light is the 08:20 classroom, dark is the 21:00 dorm
+   =========================================================== */
+:root{
+  --ground:#e6e9ee;
+  --surface:#f6f7f9;
+  --surface-2:#eceff3;
+  --ink:#151920;
+  --ink-soft:#5a6373;
+  --ink-faint:#8f98a7;
+  --rule:#c7cdd7;
+  --rule-soft:#d9dee5;
+  --navy:#2f4d6e;
+  --window:#94a9bd;
+  --crimson:#9c2a2c;
+  --sunhue:#c2853c;
+  --glass:rgba(255,255,255,.55);
+  --shaft:rgba(255,255,255,.9);
+  --mote:255,255,255;
+  --die-off:#d3d9e1;
+  --sun:0;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0e1218;
+    --surface:#161b23;
+    --surface-2:#1b212b;
+    --ink:#dee4ec;
+    --ink-soft:#8d97a8;
+    --ink-faint:#5e6879;
+    --rule:#28303c;
+    --rule-soft:#1f2631;
+    --navy:#7ea9d2;
+    --window:#4a6079;
+    --crimson:#c9474a;
+    --sunhue:#c08d4e;
+    --glass:rgba(22,27,35,.6);
+    --shaft:rgba(180,205,235,.15);
+    --mote:190,215,245;
+    --die-off:#222a35;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0e1218;
+  --surface:#161b23;
+  --surface-2:#1b212b;
+  --ink:#dee4ec;
+  --ink-soft:#8d97a8;
+  --ink-faint:#5e6879;
+  --rule:#28303c;
+  --rule-soft:#1f2631;
+  --navy:#7ea9d2;
+  --window:#4a6079;
+  --crimson:#c9474a;
+  --sunhue:#c08d4e;
+  --glass:rgba(22,27,35,.6);
+  --shaft:rgba(180,205,235,.15);
+  --mote:190,215,245;
+  --die-off:#222a35;
+}
+
+/* =========================== BASE =========================== */
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-weight:400;
+  font-size:16px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+/* the sun: one warm wash over the whole document, driven by scroll */
+body::after{
+  content:"";
+  position:fixed; inset:0; pointer-events:none; z-index:60;
+  background:linear-gradient(160deg,
+    rgba(194,133,60,calc(var(--sun) * .13)) 0%,
+    rgba(194,133,60,calc(var(--sun) * .04)) 45%,
+    rgba(47,77,110,calc(var(--sun) * .10)) 100%);
+  mix-blend-mode:multiply;
+  transition:opacity .4s linear;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) body::after{ mix-blend-mode:screen; opacity:.5; }
+}
+:root[data-theme="dark"] body::after{ mix-blend-mode:screen; opacity:.5; }
+:root[data-theme="light"] body::after{ mix-blend-mode:multiply; opacity:1; }
+
+h1,h2,h3,.mincho{
+  font-family:"Shippori Mincho B1","Yu Mincho",Georgia,"Times New Roman",serif;
+  font-weight:600;
+  text-wrap:balance;
+  letter-spacing:.01em;
+}
+p{margin:0 0 1.15em;}
+a{color:inherit;}
+:focus-visible{
+  outline:2px solid var(--navy);
+  outline-offset:3px;
+  border-radius:1px;
+}
+
+/* utility: monospace data labels */
+.mono{
+  font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  font-weight:500;
+}
+.num{font-variant-numeric:tabular-nums;}
+
+/* ==================== CHAPTER RAIL ==================== */
+.rail{
+  position:fixed; left:0; top:0; bottom:0; width:74px; z-index:50;
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:space-between; padding:22px 0 20px;
+  border-right:1px solid var(--rule-soft);
+  background:var(--glass);
+  backdrop-filter:blur(14px);
+}
+.rail-seal{
+  width:26px;height:26px;border:1px solid var(--rule);border-radius:50%;
+  display:grid;place-items:center;
+  font-family:"Shippori Mincho B1",serif;font-size:12px;color:var(--ink-soft);
+  flex:0 0 auto;
+}
+.rail-marks{display:flex;flex-direction:column;gap:20px;align-items:center;}
+.mark{
+  position:relative; width:26px; height:26px; border:0; padding:0;
+  background:none; cursor:pointer; display:grid; place-items:center;
+}
+.mark i{
+  display:block; width:9px; height:1px; background:var(--ink-faint);
+  transition:width .45s cubic-bezier(.16,1,.3,1), background .45s;
+}
+.mark:hover i, .mark[aria-current="true"] i{ width:22px; background:var(--ink); }
+.mark span{
+  position:absolute; left:34px; white-space:nowrap;
+  font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--ink-soft);
+  opacity:0; transform:translateX(-5px); pointer-events:none;
+  transition:opacity .35s, transform .35s;
+}
+.mark:hover span, .mark:focus-visible span{opacity:1;transform:translateX(0);}
+.rail-clock{
+  font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;
+  color:var(--ink-faint); writing-mode:vertical-rl; text-orientation:mixed;
+}
+
+/* ==================== LAYOUT ==================== */
+.page{margin-left:74px;}
+.wrap{max-width:1000px;margin:0 auto;padding:0 40px;}
+.col{max-width:64ch;}
+section{padding:110px 0;position:relative;}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:14px;}
+.sec-head .mono{color:var(--ink-faint);}
+.sec-head hr{flex:1;border:0;border-top:1px solid var(--rule-soft);margin:0;}
+h2{font-size:clamp(26px,3.4vw,38px);line-height:1.3;margin:0 0 22px;}
+
+/* reveal */
+.rise{opacity:0;transform:translateY(14px);transition:opacity .85s cubic-bezier(.16,1,.3,1),transform .85s cubic-bezier(.16,1,.3,1);}
+.rise.seen{opacity:1;transform:none;}
+
+/* ==================== HERO / HOMEROOM ==================== */
+.hero{
+  min-height:100svh;display:flex;align-items:center;
+  padding:0;overflow:hidden;
+}
+.hero-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+/* the window: shafts of light that rotate with --sun */
+.shafts{
+  position:absolute; top:-30%; left:46%; width:120%; height:170%;
+  transform-origin:top left;
+  transform:rotate(calc(9deg + var(--sun) * 13deg));
+  opacity:.9;
+  background:repeating-linear-gradient(
+    100deg,
+    transparent 0px, transparent 42px,
+    var(--shaft) 42px, var(--shaft) 96px,
+    transparent 96px, transparent 150px);
+  -webkit-mask-image:radial-gradient(70% 62% at 42% 22%,#000 0%,transparent 78%);
+  mask-image:radial-gradient(70% 62% at 42% 22%,#000 0%,transparent 78%);
+  filter:blur(1.4px);
+}
+.blinds{
+  position:absolute; inset:0;
+  background:repeating-linear-gradient(
+    180deg, transparent 0 26px, rgba(21,25,32,.028) 26px 28px);
+  opacity:calc(.5 + var(--sun) * .3);
+}
+#motes{position:absolute;inset:0;}
+.hero-inner{position:relative;z-index:2;width:100%;}
+.eyebrow{
+  display:flex;gap:14px;align-items:center;margin-bottom:26px;
+}
+.eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--crimson);}
+.namefield{
+  font-family:"Shippori Mincho B1",serif;
+  font-size:clamp(44px,8.2vw,96px);
+  font-weight:800; line-height:1.02; letter-spacing:-.015em;
+  margin:0 0 6px; display:inline-block; min-width:2ch;
+  border-bottom:1px dashed transparent; padding-bottom:4px;
+  transition:border-color .3s;
+  cursor:text;
+}
+.namefield:hover,.namefield:focus{border-bottom-color:var(--rule);outline:none;}
+.namehint{
+  font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-faint);margin:0 0 30px;
+}
+.tagline{
+  font-size:clamp(17px,2vw,21px);color:var(--ink-soft);max-width:46ch;
+  font-weight:300;margin:0 0 40px;
+}
+.tagline b{color:var(--ink);font-weight:500;}
+.status{
+  display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--rule-soft);
+  border-bottom:1px solid var(--rule-soft);max-width:640px;
+}
+.status div{
+  padding:13px 20px 13px 0;margin-right:20px;
+  border-right:1px solid var(--rule-soft);
+}
+.status div:last-child{border-right:0;}
+.status b{display:block;font-family:"JetBrains Mono",monospace;font-size:13px;
+  font-weight:500;color:var(--ink);letter-spacing:.04em;margin-top:2px;}
+
+/* ==================== OAA PANEL ==================== */
+.oaa{border-top:1px solid var(--rule);}
+.oaa-row{
+  display:grid;grid-template-columns:1fr 92px 46px;align-items:center;
+  gap:20px;padding:17px 0;border-bottom:1px solid var(--rule-soft);
+}
+.oaa-name{font-size:15px;}
+.oaa-name em{display:block;font-style:normal;font-size:12px;color:var(--ink-faint);line-height:1.5;}
+.bar{height:2px;background:var(--rule-soft);position:relative;overflow:hidden;}
+.bar i{
+  position:absolute;inset:0 100% 0 0;background:var(--navy);
+  transition:right 1.1s cubic-bezier(.16,1,.3,1);
+}
+.grade{
+  font-family:"Shippori Mincho B1",serif;font-size:26px;font-weight:600;
+  text-align:right;line-height:1;color:var(--ink);
+}
+.grade.top{color:var(--crimson);}
+
+/* ==================== EXAMS / PROJECTS ==================== */
+.exam{
+  position:relative;border-top:1px solid var(--rule-soft);
+  padding:30px 0 30px 0;display:grid;
+  grid-template-columns:78px 1fr 200px;gap:30px;align-items:start;
+  transition:background .5s ease;
+}
+.exam::before{
+  content:"";position:absolute;left:-24px;right:-24px;top:0;bottom:0;
+  background:var(--surface);opacity:0;transition:opacity .5s ease;z-index:-1;
+}
+.exam:hover::before{opacity:1;}
+.exam:last-of-type{border-bottom:1px solid var(--rule-soft);}
+.exam-no{font-family:"Shippori Mincho B1",serif;font-size:30px;color:var(--ink-faint);line-height:1;padding-top:2px;}
+.exam h3{font-size:20px;margin:0 0 8px;}
+.exam p{font-size:14.5px;color:var(--ink-soft);margin:0 0 12px;max-width:52ch;}
+.tools{display:flex;flex-wrap:wrap;gap:6px;}
+.tools span{
+  font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.06em;
+  padding:3px 8px;border:1px solid var(--rule-soft);color:var(--ink-soft);
+}
+.exam-out{border-left:1px solid var(--rule-soft);padding-left:22px;}
+.exam-out b{
+  display:block;font-family:"Shippori Mincho B1",serif;font-size:29px;
+  line-height:1.1;color:var(--navy);font-weight:600;
+}
+.exam-out span{font-size:12.5px;color:var(--ink-faint);line-height:1.5;display:block;margin-top:3px;}
+
+/* ==================== THE DIE ==================== */
+.die-wrap{display:grid;grid-template-columns:1fr 300px;gap:46px;align-items:start;}
+.die{
+  display:grid;grid-template-columns:repeat(22,1fr);gap:3px;
+  padding:14px;border:1px solid var(--rule);background:var(--surface);
+}
+.cell{
+  aspect-ratio:1;background:var(--die-off);
+  transition:background .5s cubic-bezier(.16,1,.3,1), transform .5s cubic-bezier(.16,1,.3,1);
+}
+.cell.hot{background:var(--navy);transform:scale(1.12);}
+.cell.warm{background:var(--window);}
+.cell.idle{background:var(--window);opacity:.5;}
+.die-legend{display:flex;flex-direction:column;}
+.legend-item{
+  text-align:left;background:none;border:0;border-bottom:1px solid var(--rule-soft);
+  padding:12px 0;cursor:pointer;color:inherit;font:inherit;
+  display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  transition:padding-left .4s cubic-bezier(.16,1,.3,1),color .4s;
+}
+.legend-item:hover,.legend-item.on{padding-left:11px;color:var(--navy);}
+.legend-item small{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-faint);letter-spacing:.08em;}
+
+/* ==================== LOG ==================== */
+.log{border-left:1px solid var(--rule-soft);padding-left:30px;}
+.log-item{position:relative;padding-bottom:34px;}
+.log-item::before{
+  content:"";position:absolute;left:-35px;top:9px;width:9px;height:9px;
+  border-radius:50%;background:var(--ground);border:1px solid var(--ink-faint);
+  transition:background .4s,border-color .4s,transform .4s;
+}
+.log-item:hover::before{background:var(--crimson);border-color:var(--crimson);transform:scale(1.25);}
+.log-item h3{font-size:16px;margin:0 0 3px;}
+.log-item p{font-size:14px;color:var(--ink-soft);margin:0;max-width:56ch;}
+
+/* ==================== CONTACT ==================== */
+.contact{border-top:1px solid var(--rule);padding-top:56px;}
+.links{display:flex;flex-wrap:wrap;gap:0 34px;margin-top:26px;}
+.link{
+  position:relative;text-decoration:none;padding:9px 0;font-size:15px;
+  color:var(--ink);
+}
+.link::after{
+  content:"";position:absolute;left:0;right:100%;bottom:5px;height:1px;
+  background:var(--ink);transition:right .5s cubic-bezier(.16,1,.3,1);
+}
+.link:hover::after,.link:focus-visible::after{right:0;}
+footer{
+  margin-left:74px;border-top:1px solid var(--rule-soft);
+  padding:26px 40px 34px;display:flex;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;
+}
+
+/* ==================== CONTROLS ==================== */
+.controls{position:fixed;top:20px;right:22px;z-index:70;display:flex;gap:8px;}
+.ctl{
+  width:34px;height:34px;border:1px solid var(--rule);background:var(--glass);
+  backdrop-filter:blur(10px);color:var(--ink-soft);cursor:pointer;
+  display:grid;place-items:center;font-family:"JetBrains Mono",monospace;
+  font-size:10px;letter-spacing:.02em;transition:color .35s,border-color .35s;
+}
+.ctl:hover{color:var(--ink);border-color:var(--ink-faint);}
+.ctl.on{color:var(--crimson);border-color:var(--crimson);}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width:880px){
+  .rail{width:100%;height:52px;bottom:auto;flex-direction:row;padding:0 16px;
+    border-right:0;border-bottom:1px solid var(--rule-soft);}
+  .rail-marks{flex-direction:row;gap:14px;}
+  .mark span{display:none;}
+  .rail-clock{writing-mode:horizontal-tb;}
+  .page{margin-left:0;padding-top:52px;}
+  footer{margin-left:0;}
+  .wrap{padding:0 22px;}
+  section{padding:76px 0;}
+  .exam{grid-template-columns:46px 1fr;gap:18px;}
+  .exam-out{grid-column:2;border-left:0;padding-left:0;border-top:1px solid var(--rule-soft);padding-top:12px;}
+  .die-wrap{grid-template-columns:1fr;gap:26px;}
+  .die{grid-template-columns:repeat(16,1fr);}
+  .status div{border-right:0;}
+}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto;}
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    transition-duration:.01ms !important;
+  }
+  .rise{opacity:1;transform:none;}
+  #motes{display:none;}
+}
+</style>
+
+<nav class="rail" aria-label="Class register">
+  <div class="rail-seal" aria-hidden="true">学</div>
+  <div class="rail-marks" id="marks">
+    <button class="mark" data-to="homeroom"><i></i><span>Homeroom</span></button>
+    <button class="mark" data-to="evaluation"><i></i><span>Evaluation</span></button>
+    <button class="mark" data-to="exams"><i></i><span>Special Exams</span></button>
+    <button class="mark" data-to="die"><i></i><span>The Die</span></button>
+    <button class="mark" data-to="log"><i></i><span>Log</span></button>
+    <button class="mark" data-to="contact"><i></i><span>Contact</span></button>
+  </div>
+  <div class="rail-clock" id="clock">08:20</div>
+</nav>
+
+<div class="controls">
+  <button class="ctl" id="tone" aria-pressed="false" title="Room tone">((·))</button>
+  <button class="ctl" id="theme" title="Switch time of day">◐</button>
+</div>
+
+<main class="page">
+
+  <!-- ================= HOMEROOM ================= -->
+  <section class="hero" id="homeroom">
+    <div class="hero-bg" aria-hidden="true">
+      <div class="shafts"></div>
+      <div class="blinds"></div>
+      <canvas id="motes"></canvas>
+    </div>
+    <div class="wrap hero-inner">
+      <div class="eyebrow">
+        <span class="dot"></span>
+        <span class="mono">Second Year &nbsp;·&nbsp; Data Science &nbsp;·&nbsp; Class Register</span>
+      </div>
+      <h1 class="namefield" id="namefield" contenteditable="true" spellcheck="false">Your Name Here</h1>
+      <p class="namehint">↑ click the name and type your own — this sample remembers it</p>
+      <p class="tagline">
+        I study <b>data science</b> the way this school studies people: measure everything,
+        assume nothing. Most of what I build ends up pointed at <b>silicon</b> —
+        the accelerators from Intel, AMD and NVIDIA that decide what a model
+        is allowed to cost.
+      </p>
+      <div class="status">
+        <div><span class="mono">Focus</span><b>ML SYSTEMS</b></div>
+        <div><span class="mono">Currently</span><b>KERNEL PROFILING</b></div>
+        <div><span class="mono">Weather</span><b>CLEAR, 21°C</b></div>
+        <div><span class="mono">Status</span><b>OPEN TO INTERNSHIPS</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= EVALUATION ================= -->
+  <section id="evaluation">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">01 — OAA Evaluation</span><hr>
+      </div>
+      <h2>The school grades four traits.<br>I grade six.</h2>
+      <p class="col" style="color:var(--ink-soft);margin-bottom:38px;">
+        Honest marks, updated each semester. A grade only moves when something
+        shipped — a passing kernel, a defended result, a code review survived.
+      </p>
+
+      <div class="oaa">
+        <div class="oaa-row rise" data-fill="88">
+          <div class="oaa-name">Python &amp; Data Engineering<em>pandas, Polars, Airflow, dbt — the boring plumbing that decides everything</em></div>
+          <div class="bar"><i></i></div><div class="grade">A</div>
+        </div>
+        <div class="oaa-row rise" data-fill="80">
+          <div class="oaa-name">Machine Learning<em>PyTorch, gradient boosting, honest validation over leaderboard chasing</em></div>
+          <div class="bar"><i></i></div><div class="grade">A−</div>
+        </div>
+        <div class="oaa-row rise" data-fill="72">
+          <div class="oaa-name">Statistics &amp; Inference<em>experiment design, causal thinking, knowing when the number means nothing</em></div>
+          <div class="bar"><i></i></div><div class="grade">B+</div>
+        </div>
+        <div class="oaa-row rise" data-fill="64">
+          <div class="oaa-name">Systems &amp; GPU Compute<em>CUDA, Triton, roofline analysis, reading a profiler without flinching</em></div>
+          <div class="bar"><i></i></div><div class="grade">B</div>
+        </div>
+        <div class="oaa-row rise" data-fill="84">
+          <div class="oaa-name">Communication<em>turning a result into a decision someone non-technical will actually make</em></div>
+          <div class="bar"><i></i></div><div class="grade">A−</div>
+        </div>
+        <div class="oaa-row rise" data-fill="97">
+          <div class="oaa-name">Persistence<em>the only trait that has never been graded down</em></div>
+          <div class="bar"><i></i></div><div class="grade top">A+</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SPECIAL EXAMS ================= -->
+  <section id="exams">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">02 — Special Exams</span><hr>
+      </div>
+      <h2>Four problems I chose to sit for.</h2>
+      <p class="col" style="color:var(--ink-soft);margin-bottom:40px;">
+        Each one had a rule I couldn't negotiate with — a memory budget, a
+        deadline, a dataset that lied. The result column is what survived.
+      </p>
+
+      <article class="exam rise">
+        <div class="exam-no">01</div>
+        <div>
+          <h3>Kernel Efficiency Exam</h3>
+          <p>Took a naive matrix-multiply and rewrote it four times — tiling, shared
+             memory, then a Triton version — profiling each against the roofline
+             instead of guessing. The write-up is the part I'm proud of.</p>
+          <div class="tools"><span>CUDA</span><span>Triton</span><span>Nsight</span><span>C++</span></div>
+        </div>
+        <div class="exam-out"><b>3.4×</b><span>over the naive kernel, at 71% of theoretical bandwidth</span></div>
+      </article>
+
+      <article class="exam rise">
+        <div class="exam-no">02</div>
+        <div>
+          <h3>Price–Performance Exam</h3>
+          <p>Scraped fourteen months of retail GPU listings across three regions,
+             normalised the mess, and modelled cost per TFLOP over time. It answers
+             one question well: when is a card actually cheap?</p>
+          <div class="tools"><span>Python</span><span>Playwright</span><span>DuckDB</span><span>Plotly</span></div>
+        </div>
+        <div class="exam-out"><b>2,140</b><span>SKUs tracked; 14 months of daily prices</span></div>
+      </article>
+
+      <article class="exam rise">
+        <div class="exam-no">03</div>
+        <div>
+          <h3>Earnings Language Exam</h3>
+          <p>Sixty semiconductor earnings calls from Intel, AMD and NVIDIA, scored
+             for hedging language, then tested against the guidance that followed.
+             Hedging predicts a miss better than sentiment does.</p>
+          <div class="tools"><span>PyTorch</span><span>spaCy</span><span>scikit-learn</span></div>
+        </div>
+        <div class="exam-out"><b>0.71</b><span>AUC on out-of-sample guidance misses</span></div>
+      </article>
+
+      <article class="exam rise">
+        <div class="exam-no">04</div>
+        <div>
+          <h3>Attendance Forecast Exam</h3>
+          <p>A small, real problem: predicting lecture attendance from timetable,
+             weather and assessment calendars, so the department stops booking
+             the wrong rooms. Deployed as a weekly email nobody has unsubscribed from.</p>
+          <div class="tools"><span>LightGBM</span><span>Postgres</span><span>Streamlit</span></div>
+        </div>
+        <div class="exam-out"><b>±4.2</b><span>students mean absolute error, 12 weeks live</span></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ================= THE DIE ================= -->
+  <section id="die">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">03 — Floorplan</span><hr>
+      </div>
+      <h2>Every skill takes up area.</h2>
+      <p class="col" style="color:var(--ink-soft);margin-bottom:40px;">
+        A die has a fixed budget — spend area on one block and another gets less.
+        Hover a block to see where mine actually goes.
+      </p>
+      <div class="die-wrap">
+        <div class="die" id="dieGrid" aria-hidden="true"></div>
+        <div class="die-legend" id="legend"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LOG ================= -->
+  <section id="log">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">04 — Semester Log</span><hr>
+      </div>
+      <h2>How I got here, briefly.</h2>
+      <div class="log" style="margin-top:38px;">
+        <div class="log-item rise"><span class="mono">Year 2 · Now</span>
+          <h3>Undergraduate research assistant, systems lab</h3>
+          <p>Benchmarking inference throughput across three accelerator families. Mostly this means reading profiler output until it stops looking like noise.</p></div>
+        <div class="log-item rise"><span class="mono">Year 1 · Summer</span>
+          <h3>Data analytics intern</h3>
+          <p>Rebuilt a reporting pipeline that took nine hours into one that takes eleven minutes. Nobody noticed, which was the point.</p></div>
+        <div class="log-item rise"><span class="mono">Year 1</span>
+          <h3>First CUDA kernel</h3>
+          <p>It was slower than NumPy. The second one wasn't. That gap is where the interest started.</p></div>
+        <div class="log-item rise"><span class="mono">Before</span>
+          <h3>Took a laptop apart to see the die</h3>
+          <p>Put it back together, one screw spare. Still have the screw.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTACT ================= -->
+  <section id="contact">
+    <div class="wrap">
+      <div class="contact">
+        <div class="sec-head"><span class="mono">05 — End of Day</span><hr></div>
+        <h2 class="col">If you're building something that has to run fast<br>on hardware that costs real money — write to me.</h2>
+        <div class="links">
+          <a class="link" href="#">Email</a>
+          <a class="link" href="#">GitHub</a>
+          <a class="link" href="#">LinkedIn</a>
+          <a class="link" href="#">Résumé (PDF)</a>
+          <a class="link" href="#">Notes / Blog</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span class="mono">Sample build · swap the copy, keep the light</span>
+  <span class="mono" id="footClock">Scroll drives the sun</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
+
+  /* ---------- 1. the name is yours the moment you touch it ---------- */
+  var nameEl = document.getElementById("namefield");
+  var saved = store("cr.name");
+  if(saved) nameEl.textContent = saved;
+  nameEl.addEventListener("input", function(){ store("cr.name", nameEl.textContent.trim().slice(0,60)); });
+  nameEl.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); nameEl.blur(); } });
+  nameEl.addEventListener("focus", function(){
+    if(nameEl.textContent.trim() === "Your Name Here"){
+      var r = document.createRange(); r.selectNodeContents(nameEl);
+      var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    }
+  });
+
+  /* ---------- 2. scroll drives the sun ---------- */
+  var root = document.documentElement, clock = document.getElementById("clock");
+  var marks = [].slice.call(document.querySelectorAll(".mark"));
+  var sections = marks.map(function(m){ return document.getElementById(m.dataset.to); });
+  var ticking = false;
+
+  function hhmm(mins){
+    var h = Math.floor(mins/60), m = Math.round(mins%60);
+    return (h<10?"0":"")+h+":"+(m<10?"0":"")+m;
+  }
+  function onScroll(){
+    var max = document.body.scrollHeight - innerHeight;
+    var p = max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0;
+    root.style.setProperty("--sun", p.toFixed(4));
+    clock.textContent = hhmm(500 + p * 645);           /* 08:20 → 19:05 */
+
+    var mid = scrollY + innerHeight * 0.38, active = 0;
+    for(var i=0;i<sections.length;i++){ if(sections[i] && sections[i].offsetTop <= mid) active = i; }
+    marks.forEach(function(m,i){ m.setAttribute("aria-current", i===active ? "true" : "false"); });
+    ticking = false;
+  }
+  addEventListener("scroll", function(){
+    if(!ticking){ ticking = true; requestAnimationFrame(onScroll); }
+  }, {passive:true});
+  addEventListener("resize", onScroll);
+  onScroll();
+
+  marks.forEach(function(m){
+    m.addEventListener("click", function(){
+      var t = document.getElementById(m.dataset.to);
+      if(t) t.scrollIntoView({behavior: reduced ? "auto" : "smooth", block:"start"});
+    });
+  });
+
+  /* ---------- 3. reveal + grade bars ---------- */
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(!en.isIntersecting) return;
+      var el = en.target;
+      el.classList.add("seen");
+      var fill = el.dataset.fill;
+      if(fill){
+        var bar = el.querySelector(".bar i");
+        if(bar) setTimeout(function(){ bar.style.right = (100 - fill) + "%"; }, 180);
+      }
+      io.unobserve(el);
+    });
+  }, {threshold:.18, rootMargin:"0px 0px -8% 0px"});
+  [].forEach.call(document.querySelectorAll(".rise"), function(el,i){
+    el.style.transitionDelay = (Math.min(i,6) * 55) + "ms";
+    io.observe(el);
+  });
+
+  /* ---------- 4. the die: skills as silicon area ---------- */
+  var COLS = 22, ROWS = 12;
+  var blocks = [
+    {n:"Python &amp; Data Engineering", a:"pandas · Polars · dbt",   x:0,  y:0, w:8, h:5},
+    {n:"Machine Learning",             a:"PyTorch · LightGBM",      x:8,  y:0, w:9, h:5},
+    {n:"C++ &amp; Systems",            a:"memory · concurrency",    x:17, y:0, w:5, h:5},
+    {n:"CUDA &amp; GPU Compute",       a:"Triton · Nsight",         x:0,  y:5, w:7, h:7},
+    {n:"Statistics &amp; Inference",   a:"causal · experiments",    x:7,  y:5, w:6, h:4},
+    {n:"SQL &amp; Warehousing",        a:"Postgres · DuckDB",       x:13, y:5, w:5, h:4},
+    {n:"Visualization &amp; Writing",  a:"the part that persuades", x:7,  y:9, w:11,h:3},
+    {n:"I/O &amp; Interfaces",         a:"APIs · pipelines",        x:18, y:5, w:4, h:7}
+  ];
+  var grid = document.getElementById("dieGrid"), legend = document.getElementById("legend");
+  var cells = [];
+  if(innerWidth <= 880) COLS = 16;
+  for(var i=0;i<COLS*ROWS;i++){
+    var c = document.createElement("div"); c.className = "cell";
+    grid.appendChild(c); cells.push(c);
+  }
+  grid.style.gridTemplateColumns = "repeat(" + COLS + ",1fr)";
+  function cellsOf(b){
+    var out = [];
+    for(var y=b.y; y<b.y+b.h; y++){
+      for(var x=b.x; x<b.x+b.w; x++){
+        if(x < COLS && y < ROWS) out.push(cells[y*COLS + x]);
+      }
+    }
+    return out;
+  }
+  blocks.forEach(function(b){
+    b.cells = cellsOf(b);
+    var btn = document.createElement("button");
+    btn.className = "legend-item"; btn.type = "button";
+    btn.innerHTML = "<span>" + b.n + "</span><small>" + (b.w*b.h) + " u²</small>";
+    function on(){
+      btn.classList.add("on");
+      b.cells.forEach(function(c,i){
+        setTimeout(function(){ c.classList.add("hot"); }, reduced ? 0 : i * 7);
+      });
+    }
+    function off(){
+      btn.classList.remove("on");
+      b.cells.forEach(function(c){ c.classList.remove("hot"); });
+    }
+    btn.addEventListener("mouseenter", on);
+    btn.addEventListener("focus", on);
+    btn.addEventListener("mouseleave", off);
+    btn.addEventListener("blur", off);
+    legend.appendChild(btn);
+  });
+  /* ambient activity — the die is never quite idle */
+  if(!reduced){
+    setInterval(function(){
+      var c = cells[Math.floor(Math.random()*cells.length)];
+      if(!c || c.classList.contains("hot")) return;
+      c.classList.add("idle");
+      setTimeout(function(){ c.classList.remove("idle"); }, 700);
+    }, 260);
+  }
+
+  /* ---------- 5. dust in the light ---------- */
+  var cv = document.getElementById("motes");
+  if(cv && !reduced){
+    var ctx = cv.getContext("2d"), motes = [], W = 0, H = 0;
+    function size(){
+      var r = cv.parentElement.getBoundingClientRect();
+      var dpr = Math.min(devicePixelRatio || 1, 2);
+      W = r.width; H = r.height;
+      cv.width = W * dpr; cv.height = H * dpr;
+      cv.style.width = W + "px"; cv.style.height = H + "px";
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      motes = [];
+      var n = Math.round(Math.min(90, W * H / 16000));
+      for(var i=0;i<n;i++){
+        motes.push({ x:Math.random()*W, y:Math.random()*H,
+          r:Math.random()*1.5+.4, vy:-(Math.random()*.12+.03),
+          vx:(Math.random()-.5)*.13, a:Math.random()*.45+.12,
+          t:Math.random()*Math.PI*2 });
+      }
+    }
+    var tint = function(){ return getComputedStyle(root).getPropertyValue("--mote").trim() || "255,255,255"; };
+    var rgb = tint();
+    function frame(){
+      ctx.clearRect(0,0,W,H);
+      for(var i=0;i<motes.length;i++){
+        var m = motes[i];
+        m.t += .012;
+        m.x += m.vx + Math.sin(m.t) * .16;
+        m.y += m.vy;
+        if(m.y < -6){ m.y = H + 6; m.x = Math.random()*W; }
+        if(m.x < -6) m.x = W + 6; else if(m.x > W + 6) m.x = -6;
+        ctx.beginPath();
+        ctx.fillStyle = "rgba(" + rgb + "," + (m.a * (0.55 + Math.sin(m.t)*0.45)).toFixed(3) + ")";
+        ctx.arc(m.x, m.y, m.r, 0, 6.283);
+        ctx.fill();
+      }
+      requestAnimationFrame(frame);
+    }
+    size(); addEventListener("resize", size); frame();
+    var refresh = function(){ rgb = tint(); };
+  }
+
+  /* ---------- 6. time of day ---------- */
+  var tBtn = document.getElementById("theme");
+  var pref = store("cr.theme");
+  if(pref) root.setAttribute("data-theme", pref);
+  tBtn.addEventListener("click", function(){
+    var now = root.getAttribute("data-theme");
+    if(!now) now = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    var next = now === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    store("cr.theme", next);
+    if(typeof refresh === "function") refresh();
+  });
+
+  /* ---------- 7. room tone — filtered noise, off by default ---------- */
+  var audio = null, toneBtn = document.getElementById("tone");
+  toneBtn.addEventListener("click", function(){
+    if(!audio){
+      try{
+        var AC = window.AudioContext || window.webkitAudioContext;
+        var ac = new AC();
+        var len = ac.sampleRate * 3;
+        var buf = ac.createBuffer(1, len, ac.sampleRate);
+        var d = buf.getChannelData(0), last = 0;
+        for(var i=0;i<len;i++){
+          var white = Math.random()*2 - 1;
+          last = (last + .019 * white) / 1.019;
+          d[i] = last * 3.2;
+        }
+        var src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+        var lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 620; lp.Q.value = .4;
+        var gain = ac.createGain(); gain.gain.value = 0;
+        src.connect(lp); lp.connect(gain); gain.connect(ac.destination);
+        src.start();
+        audio = {ac:ac, gain:gain, on:false};
+      }catch(e){ toneBtn.disabled = true; return; }
+    }
+    if(audio.ac.state === "suspended") audio.ac.resume();
+    audio.on = !audio.on;
+    audio.gain.gain.setTargetAtTime(audio.on ? .05 : 0, audio.ac.currentTime, .5);
+    toneBtn.classList.toggle("on", audio.on);
+    toneBtn.setAttribute("aria-pressed", String(audio.on));
+  });
+})();
+</script>
