@@ -217,14 +217,7 @@ h2{font-size:clamp(26px,3.4vw,38px);line-height:1.3;margin:0 0 22px;}
   opacity:calc(.5 + var(--sun) * .3);
 }
 #motes{position:absolute;inset:0;}
-.hero-inner{position:relative;z-index:2;width:100%;
-  display:grid;grid-template-columns:auto 1fr;gap:0 42px;align-items:start;}
-.stamp{
-  font-family:"Anton",Impact,sans-serif;
-  font-size:clamp(30px,4.4vw,52px); line-height:.86; letter-spacing:.01em;
-  color:var(--ink); padding-top:6px;
-}
-.stamp span{display:block;}
+.hero-inner{position:relative;z-index:2;width:100%;}
 .hero-text{min-width:0;}
 .eyebrow{
   display:flex;gap:14px;align-items:center;margin-bottom:26px;
@@ -234,16 +227,8 @@ h2{font-size:clamp(26px,3.4vw,38px);line-height:1.3;margin:0 0 22px;}
   font-family:"Anton","Arial Narrow",Impact,sans-serif;
   font-size:clamp(42px,7.4vw,88px);
   font-weight:400; line-height:.94; letter-spacing:.004em;
-  text-transform:uppercase;
-  margin:0 0 6px; display:inline-block; min-width:2ch;
-  border-bottom:1px dashed transparent; padding-bottom:4px;
-  transition:border-color .3s;
-  cursor:text;
-}
-.namefield:hover,.namefield:focus{border-bottom-color:var(--rule);outline:none;}
-.namehint{
-  font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--ink-faint);margin:0 0 30px;
+  text-transform:uppercase; text-wrap:balance;
+  margin:0 0 30px; max-width:14ch;
 }
 .tagline{
   font-size:clamp(17px,2vw,21px);color:var(--ink-soft);max-width:46ch;
@@ -435,8 +420,6 @@ footer{
   .rail-clock{writing-mode:horizontal-tb;}
   .page{margin-left:0;padding-top:60px;}
   footer{margin-left:0;padding:26px 22px 34px;}
-  .hero-inner{grid-template-columns:1fr;gap:14px;}
-  .stamp{display:flex;gap:14px;padding-top:0;}
   .sheet{grid-template-columns:repeat(4,1fr);grid-auto-rows:62px;}
   .s-stamp{grid-column:1/2;grid-row:1/3;}
   .s-head{grid-column:2/5;grid-row:1/3;}
@@ -498,16 +481,12 @@ footer{
       <canvas id="motes"></canvas>
     </div>
     <div class="wrap hero-inner">
-      <div class="stamp" aria-label="11 November 2023">
-        <span>11</span><span>11</span><span>23</span>
-      </div>
       <div class="hero-text">
         <div class="eyebrow">
           <span class="dot"></span>
           <span class="mono">Second Year &nbsp;·&nbsp; Data Science &nbsp;·&nbsp; Class Register</span>
         </div>
-        <h1 class="namefield" id="namefield" contenteditable="true" spellcheck="false">Marsha Lenathea</h1>
-        <p class="namehint">↑ click the name and type your own — this sample remembers it</p>
+        <h1 class="namefield">Panam Williams Mballos</h1>
         <p class="tagline">
           I study <b>data science</b> the way this school studies people: measure
           everything, assume nothing. Most of what I build ends up pointed at
@@ -757,20 +736,7 @@ footer{
   var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } }
 
-  /* ---------- 1. the name is yours the moment you touch it ---------- */
-  var nameEl = document.getElementById("namefield");
-  var saved = store("cr.name");
-  if(saved) nameEl.textContent = saved;
-  nameEl.addEventListener("input", function(){ store("cr.name", nameEl.textContent.trim().slice(0,60)); });
-  nameEl.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); nameEl.blur(); } });
-  nameEl.addEventListener("focus", function(){
-    if(nameEl.textContent.trim() === "Your Name Here"){
-      var r = document.createRange(); r.selectNodeContents(nameEl);
-      var s = getSelection(); s.removeAllRanges(); s.addRange(r);
-    }
-  });
-
-  /* ---------- 2. scroll drives the sun ---------- */
+  /* ---------- scroll drives the sun ---------- */
   var root = document.documentElement, clock = document.getElementById("clock");
   var marks = [].slice.call(document.querySelectorAll(".mark"));
   var sections = marks.map(function(m){ return document.getElementById(m.dataset.to); });

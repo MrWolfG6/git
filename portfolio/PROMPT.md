@@ -55,7 +55,7 @@ WHO IT'S FOR
 A second-year university data science student focused on machine learning
 systems and the silicon underneath them — Intel, AMD, NVIDIA accelerators.
 Seeking internships at chip and AI-infrastructure companies.
-Name: [YOUR NAME]. Links: [GITHUB] [LINKEDIN] [EMAIL].
+Name: Panam Williams Mballos. Links: [GITHUB] [LINKEDIN] [EMAIL].
 
 CONCEPT
 "An elite Japanese school's student register, printed on a silicon die."
