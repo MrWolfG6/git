@@ -1,363 +1,381 @@
 # Class Register — build prompts for an anime data-science portfolio
 
-Everything here is copy-paste ready. Section 2 builds the site, section 3 makes
-your anime avatar from a photo, section 4 is the interaction spec, section 5 is
-how to make it earn.
+Built around the **11.11.23 cobalt poster** (photography by ak.merchant). That
+poster is the design system; everything here extends it rather than replacing it.
+
+- §1 the concept · §2 the site prompt · §3 **your avatar, from your photos**
+- §4 the interaction spec · §5 how to make it rich
 
 ---
 
-## 1. The concept, in one line
+## 1. The concept
 
 **An elite Japanese school's student register, printed on a silicon die.**
 
-That's the whole idea, and it's why it doesn't look like every other anime
-portfolio. Two worlds that shouldn't touch:
+Two systems that measure everything and reveal nothing: *Classroom of the Elite*'s
+cold institutional grading, and a chip floorplan. So the site grades you the way
+the school grades students, and lays your skills out as silicon area.
 
-- *Classroom of the Elite* — cold institutional calm, overcast light, muted
-  uniform navy, a school that reduces people to grades and merit points.
-- Semiconductors — floorplans, standard-cell grids, area budgets, yield.
+The section names are the concept. Do not replace them with About / Projects /
+Skills / Contact.
 
-Both are systems that measure everything and reveal nothing. So the site grades
-you the way the school grades students, and lays out your skills the way a chip
-lays out blocks. Every section name comes from one world or the other:
-
-| Section | In-universe name | What it really is |
+| Section | In-universe name | What it is |
 |---|---|---|
-| Hero | **Homeroom** | Name, one-line thesis, current status |
-| Skills | **OAA Evaluation** | Six traits, honest letter grades |
-| Projects | **Special Exams** | 4 projects, each with one hard constraint |
-| Stack | **Floorplan / The Die** | Skills as silicon area you hover |
-| History | **Semester Log** | Timeline |
-| Contact | **End of Day** | Links |
+| 01 Hero | **Homeroom** | Name, thesis, current status |
+| 02 Skills | **OAA Evaluation** | Six traits, honest letter grades |
+| 03 Projects | **Special Exams** | Four projects, each with its constraint |
+| 04 Gallery | **Contact Sheet** | The poster grid, rebuilt as your lookbook |
+| 05 Stack | **Floorplan** | Skills as silicon area you hover |
+| 06 History | **Semester Log** | Timeline |
+| 07 Contact | **End of Day** | Links |
 
-**Do not** name sections "About / Projects / Skills / Contact". The naming *is*
-the concept.
+### What the poster dictates
+
+| Element | Taken from the poster |
+|---|---|
+| Palette | Cobalt, true black, pure white. **Nothing else.** |
+| Display type | Heavy condensed caps — Anton on Google Fonts is the closest free match |
+| Frame | A 1px black rule inset 14px from the viewport edge, fixed |
+| Grid | Modular cells, white gutters, hard rectangles, no rounded corners |
+| Date stamp | `11 / 11 / 23` stacked, set large, sitting left of the name |
+
+The one thing the site adds that the poster can't: **the light moves.**
 
 ---
 
 ## 2. Master build prompt
 
-> Paste this into Claude, v0, Cursor, Lovable — anything that writes a page.
-> Replace the bracketed lines with your own facts first.
+> Paste into Claude, v0, Cursor or Lovable. Replace the bracketed values first.
 
 ```
 Build a single-page personal portfolio as one self-contained HTML file
-(inline CSS and JS, no build step, no framework).
+(inline CSS and JS, no framework, no build step).
 
 WHO IT'S FOR
-A second-year university data science student. Obsessed with machine learning
+A second-year university data science student focused on machine learning
 systems and the silicon underneath them — Intel, AMD, NVIDIA accelerators.
-Wants internships at chip and AI-infrastructure companies.
+Seeking internships at chip and AI-infrastructure companies.
 Name: [YOUR NAME]. Links: [GITHUB] [LINKEDIN] [EMAIL].
 
 CONCEPT
 "An elite Japanese school's student register, printed on a silicon die."
-Visual register of Classroom of the Elite: cold, quiet, institutional, overcast.
-Structural register of a chip floorplan: grids, area budgets, hairlines.
-Section names come from those two worlds, never from the generic portfolio
-vocabulary. Use: Homeroom / OAA Evaluation / Special Exams / Floorplan /
-Semester Log / End of Day.
+Visual restraint of Classroom of the Elite; structural logic of a chip
+floorplan. Section names: Homeroom / OAA Evaluation / Special Exams /
+Contact Sheet / Floorplan / Semester Log / End of Day.
 
-ART DIRECTION — restraint is the whole point
-This must feel like a still frame from a quiet classroom scene at 4pm, not like
-an action anime. Calm, subtle, a lot of empty space, hairline rules, nothing
-glowing or neon. If a decision could be described as "flashy", make the other one.
+ART DIRECTION
+A still frame from a quiet classroom at 4pm, not an action anime. Calm, a lot
+of white space, hairline rules, hard rectangles, no rounded corners, nothing
+glowing. If a choice could be called "flashy", make the other one.
 
-COLOR — cold institutional light, NOT warm cream, NOT purple gradients
-  ground     #e6e9ee   blue-biased grey paper
-  surface    #f6f7f9
-  ink        #151920   cold near-black
-  ink-soft   #5a6373
-  rule       #c7cdd7   hairlines
-  navy       #2f4d6e   blazer navy, the primary accent
-  window     #94a9bd   light through glass
-  crimson    #9c2a2c   used EXACTLY ONCE on the whole page
-  sun        #c2853c   only ever driven by scroll, never static
-Dark theme is the same room at 9pm: ground #0e1218, surface #161b23,
-ink #dee4ec, rule #28303c, navy lifts to #7ea9d2, crimson to #c9474a.
-Define every colour as a CSS custom property on :root. Redefine ONLY the
+COLOR — three colours, and one of them only arrives by scrolling
+  ground     #ffffff
+  surface    #f5f6f8
+  ink        #0d0d0f      true black
+  ink-soft   #54585f
+  rule       #d2d5da      hairlines
+  cobalt     #1b3eae      THE accent — the subject's own blue
+  sun        #c2853c      never static, only ever driven by scroll
+Dark theme is the same room at 9pm: ground #0b0c0f, surface #141519,
+ink #eef0f4, rule #282b32, cobalt lifts to #5b7fe0.
+Declare every colour as a CSS custom property on :root. Redefine ONLY those
 properties inside `@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) }`
-and `:root[data-theme="dark"]`. Never declare a colour whose only definition
-lives inside a media query.
+and again inside `:root[data-theme="dark"]`. Never declare a colour whose only
+definition lives inside a media query — that is the classic unreadable bug.
+Be generous with the cobalt; it is the identity. Introduce no fourth hue.
 
-TYPE — three faces, from Google Fonts
-  Display: Shippori Mincho B1   (a Japanese mincho serif — gives the light-novel
-                                 register; use 600/800 weights, tight tracking)
-  Body:    Zen Kaku Gothic New  (calm humanist gothic, 300/400/500)
-  Data:    JetBrains Mono       (grades, labels, telemetry, 10-11px, uppercase,
-                                 .14em letter-spacing)
-Do not use Inter, Space Grotesk, Poppins, Playfair or Montserrat.
-Headline scale clamp(44px, 8.2vw, 96px). Body 16px/1.75. Prose max 64ch.
+TYPE — four faces, four jobs, all from Google Fonts
+  Anton                — the poster face. The name, the 11/11/23 stamp, project
+                         numbers. All caps, tight, never below 24px.
+  Shippori Mincho B1   — a Japanese mincho serif for section headlines. This is
+                         what supplies the light-novel register.
+  Zen Kaku Gothic New  — body, 300/400/500, 16px/1.75, max 64ch.
+  JetBrains Mono       — labels, grades, telemetry. 10-11px, uppercase, .14em.
+Anton against a mincho serif is the whole tension: fashion poster meets quiet
+classroom. Do not use Inter, Space Grotesk, Poppins, Playfair or Montserrat.
+Headline scale clamp(42px, 7.4vw, 88px).
 
 LAYOUT
-Fixed 74px left rail down the full height — a class-register spine. In it: a
-seal glyph at top, six tick marks (one per section, the active one grows from
-9px to 22px and the label slides out on hover), and a vertical clock at the
-bottom. Content sits in a 1000px column to the right of the rail. Two full-bleed
-moments only: the hero and the die. Everything else is hairline-ruled rows.
-Below 880px the rail becomes a 52px top bar and labels hide.
+A 1px black frame fixed at inset 14px — the poster's border.
+Inside it, a fixed 74px left rail: a seal glyph, seven tick marks (the active
+one grows 9px to 22px and its label slides out on hover), a vertical clock at
+the bottom. Content in a 1000px column right of the rail.
+Below 880px the frame insets to 8px and the rail becomes a top bar.
 
 THE SIGNATURE MOVE — scroll drives the sun
-Set a CSS variable --sun from 0 to 1 based on scroll progress. It drives three
-things at once:
-  1. A fixed full-page warm gradient wash (multiply in light, screen in dark)
-     that goes from neutral morning to amber afternoon to blue dusk.
-  2. The rotation of the hero's light shafts (9deg to 22deg) — the sun moves
-     across the window as you read.
-  3. A clock in the rail counting 08:20 to 19:05.
-Reading the page takes one school day. This is the one idea to get right.
+One CSS variable --sun, 0 to 1, from scroll progress, driving three things:
+  1. a fixed full-page warm gradient wash (multiply in light, screen in dark),
+  2. the rotation of the hero's light shafts, 9deg to 22deg,
+  3. a clock in the rail counting 08:20 to 19:05.
+Reading the page takes one school day. This is the idea to get right.
 
 SECTIONS
-1. HOMEROOM (100svh). Full-bleed background: diagonal light shafts through a
-   window (repeating-linear-gradient masked with a radial-gradient so it fades
-   at the edges, blurred 1.4px), a faint horizontal blind pattern, and a canvas
-   of ~80 slow-drifting dust motes. Foreground: a mono eyebrow with a small
-   crimson dot, a huge mincho name, a 46ch tagline, and a four-cell status
-   strip between two hairlines (Focus / Currently / Weather / Status).
-   The name is contenteditable and persists to localStorage, so a visitor can
-   type their own — wrap every localStorage call in try/catch.
-2. OAA EVALUATION. Six rows, each: skill name, one-line honest description,
-   a 2px bar that fills on scroll-into-view, and a big mincho letter grade
-   right-aligned. Exactly one grade is crimson. Grades: A, A-, B+, B, A-, A+.
-3. SPECIAL EXAMS. Four projects. Grid of [number | title+description+tool tags |
-   a single result number]. On hover the row's background fades in from behind
-   with a negative-inset pseudo-element — no lift, no shadow, no scale.
-   Each project states the constraint it had to satisfy, not just the stack.
-4. FLOORPLAN. A CSS grid of 22x12 small squares — a die. Eight named blocks each
-   occupy a rectangle of cells. Hovering a legend row lights its cells in
-   sequence with a 7ms stagger. The legend shows each block's area in "u²",
-   so the page argues that skills compete for a fixed budget. Idle: one random
-   cell dimly pulses every 260ms so the die is never fully still.
-5. SEMESTER LOG. Vertical hairline, four entries, dot markers that fill crimson
-   on hover.
-6. END OF DAY. Contact links where the underline wipes left-to-right on hover
-   (animate `right` from 100% to 0 on an ::after, 500ms).
+1. HOMEROOM (100svh). Two columns: the stacked 11/11/23 stamp in Anton, then
+   the text. Background: diagonal light shafts (a repeating-linear-gradient in
+   cobalt at 5% alpha, radial-masked so it fades at the edges, blurred 1.4px),
+   a faint blind pattern, and a canvas of ~80 drifting dust motes. The name is
+   contenteditable and persists to localStorage — wrap every call in try/catch.
+   A four-cell status strip between hairlines closes the section.
+2. OAA EVALUATION. Six rows: skill, an honest one-line description, a 2px bar
+   that fills on scroll-into-view, a large mincho letter grade right-aligned.
+3. SPECIAL EXAMS. Four projects, grid of [number | title + description + tool
+   tags | one result figure]. On hover the row background fades in from a
+   negative-inset pseudo-element. No lift, no shadow, no scale.
+   Each project names the constraint it had to satisfy, not just its stack.
+4. CONTACT SHEET. Rebuild the poster's collage grid — 6 columns, 74px rows,
+   9px gutters, nine cells at fixed grid positions. Each cell is a slot for one
+   character render, showing a mono asset label over a faint 45deg cobalt hatch.
+   On hover the cell floods cobalt and the shot description appears in white.
+   The gallery doubles as the shot list until the renders exist.
+5. FLOORPLAN. A 22x12 grid of small squares — a die. Eight named blocks each
+   occupy a rectangle. Hovering a legend row lights its cells with a 7ms
+   stagger. The legend gives each block's area in "u²", so the page argues that
+   skills compete for a fixed budget. Idle: one random cell dimly pulses every
+   260ms, so the die is never fully still.
+6. SEMESTER LOG. Vertical hairline, four entries, dots that fill cobalt on hover.
+7. END OF DAY. Links whose underline wipes left to right (animate `right` from
+   100% to 0 on an ::after, 500ms).
 
-CONTROLS (fixed top-right, two 34px squares)
-  - "Room tone": WebAudio brown noise through a 620Hz lowpass at gain 0.05.
-    Off by default, off-to-on ramped with setTargetAtTime. Never autoplay.
-  - Theme toggle, persisted to localStorage.
+CONTROLS — two 34px squares, fixed top right
+  Room tone: WebAudio brown noise through a 620Hz lowpass at gain 0.05, off by
+  default, ramped with setTargetAtTime. Never autoplay.
+  Theme toggle, persisted to localStorage.
 
 MOTION
-One easing curve everywhere: cubic-bezier(.16, 1, .3, 1).
-Reveals: 14px rise + fade, 850ms, 55ms stagger, via IntersectionObserver,
-unobserve after firing. Scroll handler must be rAF-throttled and passive.
-Wrap all of it in `@media (prefers-reduced-motion: reduce)` — kill the motes
-canvas entirely, set all durations to 0.01ms.
+One easing curve throughout: cubic-bezier(.16, 1, .3, 1).
+Reveals: 14px rise and fade, 850ms, 55ms stagger, via IntersectionObserver,
+unobserved after firing. Scroll handler rAF-throttled and passive.
+Under `prefers-reduced-motion: reduce`, kill the motes canvas entirely and set
+every duration to 0.01ms.
 
 QUALITY BAR
-Semantic HTML, visible :focus-visible states, tabular-nums on all figures,
-no horizontal body scroll at any width, no library dependencies at all.
+Semantic HTML, visible :focus-visible states, tabular-nums on every figure,
+no horizontal body scroll at any width, zero dependencies.
 ```
 
 ---
 
-## 3. Your anime avatar, from your photo
+## 3. Your avatar, from the 11.11.23 photos
 
-**Nothing was attached to this request — no image came through.** Send the photo
-and I'll write the prompt tuned to your actual face. Until then, here's the
-full method.
+### 3a. What I can read from the poster
 
-### 3a. What to send
-
-Four photos beats one, every time:
-
-1. **Front, neutral, even light.** No filter, no flash, hair off the forehead.
-2. **Three-quarter turn** (~30°) — this is what fixes your nose and cheekbone.
-3. **Profile** — fixes jaw angle and brow projection.
-4. **Half or full body, standing straight** — fixes proportion and shoulder line.
-
-Plus one *candid* photo where you look like yourself, not posed. That one
-carries the expression.
-
-### 3b. The detail checklist
-
-An image model will invent anything you don't name. Fill this in and paste it
-into the prompt — these are the traits that make an anime face read as *you*:
+Fill in the gaps marked **?** — those are the ones an image model will invent.
 
 ```
-Face shape      oval / round / square / heart / long   + jaw: soft or defined
-Skin tone       describe in plain words + undertone (warm, neutral, cool)
-Hairline        straight / widow's peak / receding at temples
-Hair            length, texture (coily 4c, wavy, straight), how it's parted,
-                how it sits when untouched, edges/lineup if you keep one
-Eyebrows        thickness, arch or straight, distance from the eye, gap
-Eyes            shape (almond/round/hooded/monolid), tilt (up or down at outer
-                corner), iris colour, lash density, how much lid shows
-Nose            bridge height, width at the base, nostril shape, tip
-Lips            fullness upper vs lower, cupid's bow, natural resting line
-Ears            size, whether they sit flat or stick out
-Marks           moles, freckles, scar, dimples, birthmark — KEEP THESE, they are
-                the single strongest identity signal in a stylised drawing
-Facial hair     shape and density, or none
-Glasses         frame shape, colour, thickness, where they sit
-Build           height impression, shoulder width, slim/athletic/broad, posture
-Hands           if visible — long fingers, etc.
-Signature       the one thing friends would draw you with: a chain, a watch,
-                a specific hoodie, headphones round the neck
+Skin          deep brown, warm undertone; even, matte, no heavy contouring
+Face shape    oval, tapering to a narrow well-defined chin; high cheekbones;
+              slim jaw, not heavy
+Hairline      squared-off lineup with sharp corners at the temples — a crisp
+              straight front edge. This is a strong identity marker. Keep it.
+Hair          short natural 4-type coils, dense and matte, fuller on top with a
+              tapered fade at the sides and back. No part, no product shine.
+Eyebrows      dark, medium thickness, close to the eye, gentle low arch
+Eyes          ? — hidden behind sunglasses in all six frames. NEED A PHOTO.
+Nose          medium bridge, rounded tip, moderately wide at the nostrils
+Lips          full, both lips, clear cupid's bow, defined vermilion border
+Facial hair   sparse and light — faint moustache shadow, a small patch below
+              the lower lip. No full beard. Do not let a model add one.
+Ears          medium, sitting close to the head
+Build         slim, long-limbed, narrow shoulders, tall impression, easy posture
+Marks         ? — any mole, freckle or scar? Name it. In a stylised drawing
+              these are the strongest likeness signal you have.
 ```
 
-**Rule:** name three things you will *not* let it change. Mine would be the mole,
-the hairline, and the eye tilt. Anime stylisation eats those first.
+**Signature objects — these three carry the character:**
+
+1. **Round gold-frame sunglasses with blue-tinted lenses.** Thin wire rim, keyhole
+   bridge. The single most recognisable thing about you.
+2. **A silver chain with an Africa-shaped pendant**, hanging around sternum height.
+3. **A black watch on the left wrist.**
+
+**Wardrobe:** cobalt two-piece — a collarless band-neck top with a short placket,
+three-quarter sleeves and a left chest pocket, matching straight-leg trousers,
+black suede loafers worn without visible socks.
+
+### 3b. The gap, and why it's actually useful
+
+You're wearing the sunglasses in **all six frames**, so I can't specify your eye
+shape, tilt or lid — and that's precisely the feature stylisation distorts most.
+
+So do both:
+
+- **Send one photo without the sunglasses**, front-on and neutral, so the eyes
+  can be specified for the two or three renders that need them.
+- **Keep the sunglasses on for most of the set anyway.** They solve the hardest
+  problem in AI character work — likeness drifting between images — because the
+  glasses are a fixed, high-contrast, easily-reproduced shape. And a character
+  whose eyes you rarely see is *exactly* the Classroom of the Elite register:
+  composed, readable to no one. The trait and the technique agree.
 
 ### 3c. The image prompt
 
 ```
 Anime character portrait in the visual style of the Classroom of the Elite
-anime adaptation. Muted, restrained, realistic-proportioned anime — NOT
-big-eyed moe, NOT shonen action art.
+anime adaptation. Muted, restrained, realistically proportioned anime.
+NOT big-eyed moe. NOT shonen action art.
 
-STYLE SPECIFICATION
-Thin, precise, even-weight linework with no thick outer contour.
-Soft two-tone cel shading with a single soft-edged shadow pass; no rim light,
-no glow, no lens flare, no speed lines.
-Desaturated cool palette: blue-grey shadows, cool neutral skin shading.
-Realistic head-to-body proportion (about 1:7.5), realistic eye size — eyes
-about one eye-width apart, detailed iris with a soft gradient and one small
-highlight, thin restrained lashes.
-Calm, closed-mouth, slightly detached expression. Eyes looking just past the
-viewer, not at them. Composed, not smiling.
-Flat, low-contrast background with soft depth-of-field falloff.
+STYLE
+Thin, precise, even-weight linework with no heavy outer contour.
+Soft two-tone cel shading, one soft-edged shadow pass. No rim light, no glow,
+no lens flare, no speed lines, no outline glow.
+Desaturated cool palette with cobalt blue as the only saturated colour.
+Realistic head-to-body ratio, roughly 1:7.5. Realistic eye size and spacing.
+Calm, closed-mouth, faintly detached expression. Composed, not smiling.
 
 SUBJECT
-[paste your filled-in checklist here]
+A young Black man, early twenties. Deep brown skin with a warm undertone,
+matte and even. Oval face tapering to a narrow, well-defined chin; high
+cheekbones; a slim jaw. Short dense natural 4-type coils, fuller on top with a
+clean tapered fade at the sides, and a sharp squared-off lineup with crisp
+corners at the temples. Dark medium-thick eyebrows with a low gentle arch,
+sitting close to the eye. Medium nose bridge, rounded tip, moderately wide
+nostrils. Full lips with a clear cupid's bow. Sparse light facial hair — a
+faint moustache and a small patch below the lower lip, no beard. Slim,
+long-limbed build with narrow shoulders; relaxed upright posture.
+[ADD YOUR EYE SHAPE AND ANY MOLES / FRECKLES / SCARS HERE]
+
+ALWAYS PRESENT
+Round gold wire-frame sunglasses with blue-tinted lenses, thin rim, keyhole
+bridge. A fine silver chain with a small silver Africa-shaped pendant at
+sternum height. A black wristwatch on the left wrist.
 
 WARDROBE
-A university student, not a high-schooler: a dark navy overshirt or knit over a
-plain white tee, or a charcoal quarter-zip. Neat but not a uniform.
-Optional: a lanyard, a thin silver watch, headphones resting on the neck.
+A cobalt blue two-piece set: a collarless band-neck top with a short buttoned
+placket, three-quarter sleeves and a left chest pocket, with matching
+straight-leg trousers. Black suede loafers, no visible socks.
+The cobalt is the only saturated colour in the frame.
 
-LIGHTING AND FRAMING
-Late-afternoon light from a window at camera left, coming in at a low angle.
-Cool ambient fill. Faint dust visible in the light. Upper-body framing,
-three-quarter turn, head slightly lowered, eye level with the viewer.
+LIGHT AND FRAMING
+Late-afternoon light from a window at camera left, low angle. Cool ambient
+fill. Faint dust visible in the beam. Flat low-contrast background with soft
+depth-of-field falloff. Upper body, three-quarter turn, eye level.
 
 DO NOT
 Do not enlarge the eyes. Do not slim or reshape the jaw. Do not lighten the
-skin tone. Do not remove moles, freckles or scars. Do not add a smile.
-Do not add glow, sparkles, neon, or a busy background.
+skin. Do not remove or smooth moles, freckles or scars. Do not add a beard.
+Do not add a smile. Do not add glow, sparkles, neon, or a busy background.
+Do not change the cobalt to teal, navy or purple.
 ```
 
-### 3d. Render the set, not one picture
+### 3d. The nine renders the site needs
 
-The site needs a *character*, so generate a sheet in one session with the same
-seed and reference:
+These map one-to-one onto the Contact Sheet slots already built into the page.
 
-| Asset | Use | Prompt add-on |
+| Slot | Shot | Prompt add-on |
 |---|---|---|
-| **Hero portrait** | Homeroom, right side | as above, upper body, looking away |
-| **Seated at a desk** | Hero alternate | side view, laptop, window light |
-| **Neutral bust** | The "student ID" card | flat grey background, front-facing |
-| **Three expressions** | Micro-reactions on hover | neutral / faint smile / thinking |
-| **Silhouette, back turned** | End of Day section | walking away down a corridor |
-| **Line-art only, no colour** | Loading state, watermark | flatten to strokes |
+| 01 | Hero portrait | three-quarter turn, chin slightly up, looking past the viewer |
+| 02 | Full figure | standing, one hand in pocket, weight on the back foot, full height |
+| 03 | Eyeline crop | letterbox band across the sunglasses and brow only |
+| 04 | Overhead | shot from above looking up at camera, arms loose — the poster's lower-left pose |
+| 05 | Line art | same portrait, strokes only, no fill — loading states and favicon |
+| 06 | Pendant detail | close crop on chain and Africa pendant against cobalt fabric, no face |
+| 07 | With the cat | cat held up at eye level, both arms raised, head tilted toward it |
+| 08 | Back turned | walking away down a corridor, silhouette — for End of Day |
+| 09 | Neutral bust | flat grey ground, front-facing — the student ID card |
 
-Export everything as **PNG with a transparent background** so you can composite
-the character over your own light shafts and control the atmosphere in CSS
-rather than baking it into the image.
+Export every one as **PNG with a transparent background.** The light shafts and
+atmosphere live in CSS, not baked into the image — that's what lets the sun move.
 
-Tools that hold a face consistent across a set, in order of how well they do it:
-Midjourney with `--cref <your image URL> --cw 80` (highest likeness control),
-NanoBanana / Gemini image editing (best at "keep this face, change the pose"),
-Stable Diffusion with an IP-Adapter FaceID + a LoRA trained on ~20 of your
-photos (most control, most work), Leonardo.ai Character Reference (easiest).
+**Slot 07 is the important one.** The cat photo is the only frame in the poster
+where the composure drops. Every other image says "measured"; that one says
+there's a person behind it. Put it on the 404 page.
 
-**A hard warning:** the character must be *you*, drawn. If the result looks like
-a generic anime boy, the whole site loses its point — the recruiter's takeaway
-becomes "nice template" instead of "I remember that person".
+### 3e. Tools, ranked by how well they hold a face
+
+1. **Midjourney** — `--cref <your image URL> --cw 80`. Best likeness control.
+   Use `--cw 80` not 100, so the wardrobe can change while the face doesn't.
+2. **NanoBanana / Gemini image editing** — best at "keep this exact face, change
+   the pose". Strongest option for building the set from one locked portrait.
+3. **Stable Diffusion + IP-Adapter FaceID**, plus a LoRA trained on ~20 photos.
+   Most control, most work, fully reproducible seeds.
+4. **Leonardo.ai Character Reference** — easiest to start.
+
+Generate the whole set in **one session, one seed, one reference.** Faces drift
+between sessions, and a lookbook of nine slightly different people is worse than
+no lookbook.
+
+**The hard rule:** it has to be *you*, drawn. If it comes out a generic anime
+boy, the takeaway becomes "nice template" instead of "I remember that person" —
+and remembering the person is the entire return on this project.
 
 ---
 
 ## 4. Interaction spec — calm but never inert
 
-You asked for subtle, calm and interactive at once. Those pull against each
-other, and the resolution is: **one thing moves at a time, and it always moves
-slowly.**
+Subtle and interactive pull against each other. The resolution is: **one thing
+moves at a time, and it always moves slowly.**
 
-Rules that produce it:
+1. **One easing curve site-wide.** `cubic-bezier(.16, 1, .3, 1)`. Shared easing
+   is what makes separate animations feel like one hand made them.
+2. **Nothing under 400ms.** Snappy reads as cheap here. Reveals 850ms, hovers 500ms.
+3. **Hover changes exactly one property.** A line grows. A cell floods cobalt.
+   A row shifts 11px. Never lift + scale + shadow + colour at once.
+4. **No motion without cause.** Nothing loops but the dust and one dim die cell —
+   both atmosphere, both nearly invisible.
+5. **The page has a state, and scroll is its only control.** Sun, clock, rail.
+   That's the difference between "animated" and "alive".
 
-1. **One easing curve for the entire site.** `cubic-bezier(.16, 1, .3, 1)`.
-   Shared easing is what makes separate animations feel like one hand made them.
-2. **Nothing under 400ms.** Snappy reads as cheap here. Reveals 850ms, hovers
-   450–500ms.
-3. **Hover changes *one* property.** A line grows. A background fades in. A row
-   shifts 11px right. Never lift + scale + shadow + colour together.
-4. **No motion without cause.** Nothing loops except the dust and one dim cell
-   on the die — both are *atmosphere*, both are nearly invisible.
-5. **The page has a state, and scroll is the only control.** The sun, the clock,
-   the rail. This is the difference between "animated" and "alive".
+Worth building once the base is up:
 
-Additions worth building once the base is up:
-
-- **Reading light.** A very faint radial gradient following the cursor at ~6%
-  opacity — the room responds to where you're looking. Disable on touch.
-- **Chapter cut.** When a new section crosses the top, the rail tick draws
-  itself in over 450ms. A scene change, not a page transition.
-- **A grade that changes.** One skill on the OAA panel updates from a JSON file
-  with a `lastUpdated` date. It proves the site is maintained.
-- **Rain mode.** Press `R` for overcast: shafts fade, a canvas rain layer, room
-  tone shifts. Classroom of the Elite is half rain. Nobody will find it, and
-  the one person who does will remember you.
-- **The empty-seat easter egg.** Scroll to the very bottom, wait 4 seconds, and
-  a single line fades in: a desk stays reserved until the student stops showing
-  up. Undersell it. That's the register's voice.
+- **Reading light.** A faint radial gradient trailing the cursor at ~6% opacity.
+  Disable on touch.
+- **The eyeline strip.** Slot 03 sits as a thin band across the Contact Sheet.
+  Parallax it a few pixels against scroll — the one place the character moves.
+- **A grade that changes.** One OAA row reads from a JSON file with a
+  `lastUpdated` date. Proof the site is maintained.
+- **Rain mode.** Press `R`: shafts fade, a canvas rain layer, the room tone drops
+  in pitch. Classroom of the Elite is half rain. Almost nobody will find it.
+- **The empty-seat line.** At the very bottom, after four seconds, one line fades
+  in: a desk stays reserved until the student stops showing up. Undersell it.
 
 ---
 
 ## 5. How to make it rich
 
-Two readings of "rich" — the site itself, and your bank account. Both matter.
+### 5a. Rich in substance
 
-### 5a. Make the site rich in substance
+A beautiful shell over four thin projects is transparent to anyone hiring.
 
-A beautiful shell over four thin projects is transparent to anyone hiring. Depth
-is what converts.
+- **One project written up properly** — 1,500 words *including the approach that
+  failed*. The most credible thing a student can publish.
+- **One live thing on the page.** A GPU price-per-TFLOP chart updating weekly
+  from your own scraper. Proving something you built stays running is rarer than
+  any project.
+- **Show the profiler output.** Put the Nsight timeline on the page. The people
+  who hire for this notice, and almost nobody does it.
+- **Number every claim.** "3.4× over naive at 71% of theoretical bandwidth" beats
+  "optimised CUDA kernels" enormously.
+- **A dated changelog** of what you learned each month. Turns a static portfolio
+  into evidence of slope — and slope is what juniors get hired on.
+- **One page per project at a real URL** you can paste straight into an
+  application without routing someone through a homepage.
 
-- **Write up one project properly.** Not a README — a 1,500-word case study with
-  the failed approach in it. "Here's what I tried that didn't work" is the
-  single most credible thing a student can publish.
-- **Put a live thing on the page.** A GPU price-per-TFLOP chart that updates
-  weekly from your own scraper. It costs a cron job and it proves you ship
-  something that stays running, which is rarer than any project.
-- **Show a profiler screenshot.** For the kernel work, put the Nsight timeline
-  on the page. Almost nobody does, and the people who hire for this notice.
-- **Number every claim.** "3.4× over naive at 71% of theoretical bandwidth"
-  beats "optimised CUDA kernels" by an enormous margin.
-- **Keep an honest changelog.** A dated log of what you learned each month. It
-  turns a static portfolio into evidence of slope, and slope is what juniors
-  are actually hired on.
-- **One page per project, at a real URL** you can paste into an application
-  without sending someone to a homepage first.
+### 5b. Rich in the other sense
 
-### 5b. Make it earn
-
-Ordered by how fast a second-year student can realistically start:
+Ordered by how fast a second-year can start:
 
 1. **Sell this template.** You'll have a genuinely distinctive anime-portfolio
-   theme with a real design system. Gumroad at $19–39, or ThemeForest. The
-   anime-dev-portfolio niche is crowded with the same three neon looks; a calm
-   one has no competition. This is the fastest money on the list.
-2. **Anime-fy other people's portfolios.** You will have built the pipeline —
-   photo to consistent character set to deployed site. Charge $150–400. Your own
-   site is the entire sales pitch, and every client site links back to you.
-3. **Freelance data work.** Upwork/Contra: scraping, dashboards, cleaning. Start
-   at $25–40/hr with the price-performance project as the proof.
-4. **Write the semiconductor analysis publicly.** A newsletter doing honest
-   $/TFLOP and earnings-language analysis on Intel/AMD/NVIDIA. There's real
-   appetite and very few people writing it with actual statistics. Sponsors
-   arrive around 1,000 subscribers; more importantly, this is what gets you
-   noticed by the exact companies you named.
-5. **Teach what you just learned.** "CUDA for people who only know Python" as a
-   short paid course or a YouTube series. Being two months ahead of your
-   audience is an advantage, not a disqualification — you still remember the
-   confusion.
-6. **Competitions with real prizes.** Kaggle, and specifically the vendor ones:
-   NVIDIA's GTC contests, AMD's ROCm bounties, open-source kernel bounties.
-   These pay *and* they're the most direct line into those companies.
-7. **Open source with intent.** A small, genuinely useful tool — a profiler-log
-   parser, a price tracker — with good docs. GitHub Sponsors is a trickle, but
-   maintainership is a hiring signal that outranks any internship.
+   theme with a real design system. Gumroad at $19–39, or ThemeForest. That niche
+   is saturated with the same three neon looks; a calm one has no competition.
+   Fastest money on this list, and your own site is the entire product demo.
+2. **Anime-fy other people's portfolios.** You'll own the whole pipeline — photos
+   to a consistent character set to a deployed site. $150–400 each. Every client
+   site links back to you.
+3. **Freelance data work.** Upwork or Contra: scraping, dashboards, cleaning.
+   $25–40/hr, with the price-performance project as proof.
+4. **Publish the semiconductor analysis.** A newsletter doing honest $/TFLOP and
+   earnings-language work on Intel, AMD and NVIDIA. Real appetite, very few people
+   doing it with actual statistics. Sponsors arrive around 1,000 subscribers —
+   but the real return is being noticed by the exact companies you named.
+5. **Teach what you just learned.** "CUDA for people who only know Python."
+   Being two months ahead of your audience is an advantage: you still remember
+   the confusion.
+6. **Competitions with real prizes.** Kaggle, and specifically the vendor ones —
+   NVIDIA GTC contests, AMD ROCm bounties, open-source kernel bounties. These pay
+   *and* they're the most direct line into those companies.
+7. **Open source with intent.** One small genuinely useful tool with good docs.
+   Sponsors are a trickle; maintainership outranks most internships as a signal.
 
-**The order that actually works:** ship the site → write one deep case study →
-sell the template → let that fund the newsletter → let the newsletter get you
-the internship. Each step pays for the next one.
+**The order that compounds:** ship the site → write one deep case study → sell
+the template → let that fund the newsletter → let the newsletter get you the
+internship. Each step pays for the next.
