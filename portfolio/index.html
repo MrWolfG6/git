@@ -409,6 +409,147 @@ footer{
 .ctl:hover{color:var(--ink);border-color:var(--ink-faint);}
 .ctl.on{color:var(--mark);border-color:var(--mark);}
 
+/* ==================== CAMPUS MAP ==================== */
+.campus-frame{
+  position:relative; border:1px solid var(--rule);
+  background:var(--surface); overflow:hidden;
+  height:clamp(520px,78vh,860px); touch-action:none;
+}
+#campusCanvas{display:block;width:100%;height:100%;cursor:grab;}
+#campusCanvas.dragging{cursor:grabbing;}
+
+/* screen-upright labels floating over the buildings */
+.pins{position:absolute;inset:0;pointer-events:none;}
+.pin{
+  position:absolute; transform:translate(-50%,-100%);
+  display:flex; flex-direction:column; align-items:center; gap:0;
+  pointer-events:auto; cursor:pointer; background:none; border:0; padding:0;
+  transition:opacity .35s;
+}
+.pin-tag{
+  font-family:"JetBrains Mono",monospace; font-size:9.5px; letter-spacing:.1em;
+  text-transform:uppercase; white-space:nowrap;
+  background:var(--ground); color:var(--ink);
+  border:1px solid var(--rule); padding:3px 7px;
+  transition:background .3s,color .3s,border-color .3s;
+}
+.pin-stem{width:1px;height:14px;background:var(--rule);}
+.pin-dot{width:5px;height:5px;border-radius:50%;background:var(--cobalt);margin-top:-2px;}
+.pin:hover .pin-tag,.pin.active .pin-tag{background:var(--cobalt);color:#fff;border-color:var(--cobalt);}
+.pins.hide-labels .pin{opacity:0;pointer-events:none;}
+/* low zoom on a narrow screen: dots only, the way a map drops its labels */
+.pins.compact .pin-tag,.pins.compact .pin-stem{display:none;}
+.pins.compact .pin-dot{
+  width:11px;height:11px;margin-top:0;
+  box-shadow:0 0 0 2px var(--ground),0 0 0 3px var(--cobalt);
+}
+.pins.compact .pin{transform:translate(-50%,-50%);}
+
+/* map furniture */
+.map-ui{position:absolute;pointer-events:none;}
+.map-ui > *{pointer-events:auto;}
+.map-tl{top:14px;left:14px;max-width:230px;}
+.map-br{bottom:14px;right:14px;display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+.map-bl{bottom:14px;left:14px;}
+
+.places{
+  background:var(--glass); backdrop-filter:blur(12px);
+  border:1px solid var(--rule);
+}
+#placeList{max-height:min(44vh,300px);overflow-y:auto;}
+.places-head{
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+  width:100%;background:none;border:0;cursor:pointer;
+  font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-faint);
+  padding:9px 12px;border-bottom:1px solid var(--rule-soft);
+  transition:color .3s;
+}
+.places-head:hover{color:var(--ink);}
+.places-head b{font-weight:400;font-size:12px;}
+.places.shut .places-head{border-bottom:0;}
+.places.shut #placeList{display:none;}
+.place-btn{
+  display:block;width:100%;text-align:left;background:none;border:0;
+  border-bottom:1px solid var(--rule-soft);cursor:pointer;color:var(--ink);
+  font:inherit;font-size:12px;padding:6px 12px;
+  transition:padding-left .35s cubic-bezier(.16,1,.3,1),color .35s,background .35s;
+}
+.place-btn:last-child{border-bottom:0;}
+.place-btn:hover,.place-btn.active{padding-left:18px;color:var(--cobalt);background:var(--surface-2);}
+
+.mbtn{
+  width:34px;height:34px;border:1px solid var(--rule);background:var(--glass);
+  backdrop-filter:blur(12px);color:var(--ink-soft);cursor:pointer;
+  display:grid;place-items:center;font-family:"JetBrains Mono",monospace;
+  font-size:13px;line-height:1;transition:color .3s,border-color .3s;
+}
+.mbtn:hover{color:var(--ink);border-color:var(--ink-faint);}
+.mbtn.wide{width:auto;padding:0 10px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;}
+.mbtn.on{color:var(--cobalt);border-color:var(--cobalt);}
+.compass i{display:block;transition:transform .5s cubic-bezier(.16,1,.3,1);font-style:normal;}
+
+.legend{
+  display:flex;gap:14px;flex-wrap:wrap;background:var(--glass);
+  backdrop-filter:blur(12px);border:1px solid var(--rule);padding:8px 12px;
+}
+.legend span{
+  font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-soft);display:flex;align-items:center;gap:6px;
+}
+.legend b{width:9px;height:9px;display:block;}
+
+/* the place card — Maps' detail panel */
+.card{
+  position:absolute;top:14px;right:14px;width:288px;
+  background:var(--ground);border:1px solid var(--rule);
+  transform:translateX(calc(100% + 20px));opacity:0;
+  transition:transform .55s cubic-bezier(.16,1,.3,1),opacity .4s;
+  pointer-events:none;
+}
+.card.open{transform:none;opacity:1;pointer-events:auto;}
+.card-top{padding:16px 16px 0;}
+.card-kind{
+  font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--cobalt);
+}
+.card h3{font-size:17px;margin:6px 0 10px;line-height:1.32;}
+.card p{font-size:13.5px;color:var(--ink-soft);margin:0 0 14px;line-height:1.62;}
+.card-stats{display:flex;border-top:1px solid var(--rule-soft);}
+.card-stats div{
+  flex:1;padding:11px 16px;border-right:1px solid var(--rule-soft);
+}
+.card-stats div:last-child{border-right:0;}
+.card-stats span{
+  display:block;font-family:"JetBrains Mono",monospace;font-size:9px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);
+}
+.card-stats b{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;}
+.card-go{
+  display:block;width:100%;text-align:left;padding:12px 16px;
+  background:var(--ink);color:var(--ground);border:0;cursor:pointer;
+  font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;transition:background .3s;
+}
+.card-go:hover{background:var(--cobalt);}
+.card-close{
+  position:absolute;top:10px;right:10px;width:24px;height:24px;border:0;
+  background:none;color:var(--ink-faint);cursor:pointer;font-size:15px;line-height:1;
+}
+.card-close:hover{color:var(--ink);}
+
+.map-hint{
+  font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-faint);margin-top:12px;
+}
+
+@media (max-width:880px){
+  .campus-frame{height:clamp(420px,62vh,560px);}
+  .map-tl{max-width:150px;}
+  .card{width:calc(100% - 28px);top:auto;bottom:14px;right:14px;}
+  .legend{display:none;}
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width:880px){
   .poster-frame{inset:8px;}
@@ -456,6 +597,7 @@ footer{
   <div class="rail-seal" aria-hidden="true">学</div>
   <div class="rail-marks" id="marks">
     <button class="mark" data-to="homeroom"><i></i><span>Homeroom</span></button>
+    <button class="mark" data-to="campus"><i></i><span>Campus</span></button>
     <button class="mark" data-to="evaluation"><i></i><span>Evaluation</span></button>
     <button class="mark" data-to="exams"><i></i><span>Special Exams</span></button>
     <button class="mark" data-to="sheet"><i></i><span>Contact Sheet</span></button>
@@ -503,11 +645,70 @@ footer{
     </div>
   </section>
 
+  <!-- ================= CAMPUS ================= -->
+  <section id="campus">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="mono">01 &mdash; Campus</span><hr>
+      </div>
+      <h2>The grounds, from above.</h2>
+      <p class="col" style="color:var(--ink-soft);margin-bottom:34px;">
+        Every building here is a part of this site. Drag to pan, scroll to zoom,
+        turn the compass to change the approach &mdash; then open a structure to
+        go where it leads.
+      </p>
+
+      <div class="campus-frame">
+        <canvas id="campusCanvas"></canvas>
+        <div class="pins" id="pins"></div>
+
+        <div class="map-ui map-tl">
+          <div class="places">
+            <button class="places-head" id="btnDir" aria-expanded="true">Directory <b>&minus;</b></button>
+            <div id="placeList"></div>
+          </div>
+        </div>
+
+        <div class="map-ui map-bl">
+          <div class="legend">
+            <span><b style="background:#3f6fc4"></b>Glazing</span>
+            <span><b style="background:#7fae63"></b>Roof court</span>
+            <span><b style="background:#c8664e"></b>Track</span>
+            <span><b style="background:#f0b9cf"></b>Sakura</span>
+          </div>
+        </div>
+
+        <div class="map-ui map-br">
+          <button class="mbtn wide" id="btnLabels" aria-pressed="true">Labels</button>
+          <button class="mbtn compass" id="btnRotate" title="Rotate view"><i>&#9650;N</i></button>
+          <button class="mbtn" id="btnIn" title="Zoom in">+</button>
+          <button class="mbtn" id="btnOut" title="Zoom out">&minus;</button>
+          <button class="mbtn" id="btnReset" title="Reset view">&#8634;</button>
+        </div>
+
+        <aside class="card" id="placeCard" aria-live="polite">
+          <button class="card-close" id="cardClose" aria-label="Close">&times;</button>
+          <div class="card-top">
+            <div class="card-kind" id="cardKind"></div>
+            <h3 id="cardName"></h3>
+            <p id="cardBody"></p>
+          </div>
+          <div class="card-stats">
+            <div><span>Floors</span><b id="cardFloors"></b></div>
+            <div><span>Footprint</span><b id="cardArea"></b></div>
+          </div>
+          <button class="card-go" id="cardGo"></button>
+        </aside>
+      </div>
+      <p class="map-hint">Drag &middot; scroll to zoom &middot; click a building</p>
+    </div>
+  </section>
+
   <!-- ================= EVALUATION ================= -->
   <section id="evaluation">
     <div class="wrap">
       <div class="sec-head">
-        <span class="mono">01 — OAA Evaluation</span><hr>
+        <span class="mono">02 &mdash; OAA Evaluation</span><hr>
       </div>
       <h2>The school grades four traits.<br>I grade six.</h2>
       <p class="col" style="color:var(--ink-soft);margin-bottom:38px;">
@@ -548,7 +749,7 @@ footer{
   <section id="exams">
     <div class="wrap">
       <div class="sec-head">
-        <span class="mono">02 — Special Exams</span><hr>
+        <span class="mono">03 &mdash; Special Exams</span><hr>
       </div>
       <h2>Four problems I chose to sit for.</h2>
       <p class="col" style="color:var(--ink-soft);margin-bottom:40px;">
@@ -611,7 +812,7 @@ footer{
   <section id="sheet">
     <div class="wrap">
       <div class="sec-head">
-        <span class="mono">03 — Contact Sheet</span><hr>
+        <span class="mono">04 &mdash; Contact Sheet</span><hr>
       </div>
       <h2>Seven frames of the same person.</h2>
       <p class="col" style="color:var(--ink-soft);margin-bottom:38px;">
@@ -669,7 +870,7 @@ footer{
   <section id="die">
     <div class="wrap">
       <div class="sec-head">
-        <span class="mono">04 — Floorplan</span><hr>
+        <span class="mono">05 &mdash; Floorplan</span><hr>
       </div>
       <h2>Every skill takes up area.</h2>
       <p class="col" style="color:var(--ink-soft);margin-bottom:40px;">
@@ -687,7 +888,7 @@ footer{
   <section id="log">
     <div class="wrap">
       <div class="sec-head">
-        <span class="mono">05 — Semester Log</span><hr>
+        <span class="mono">06 &mdash; Semester Log</span><hr>
       </div>
       <h2>How I got here, briefly.</h2>
       <div class="log" style="margin-top:38px;">
@@ -711,7 +912,7 @@ footer{
   <section id="contact">
     <div class="wrap">
       <div class="contact">
-        <div class="sec-head"><span class="mono">06 — End of Day</span><hr></div>
+        <div class="sec-head"><span class="mono">07 &mdash; End of Day</span><hr></div>
         <h2 class="col">If you're building something that has to run fast<br>on hardware that costs real money — write to me.</h2>
         <div class="links">
           <a class="link" href="#">Email</a>
@@ -933,5 +1134,569 @@ footer{
     toneBtn.classList.toggle("on", audio.on);
     toneBtn.setAttribute("aria-pressed", String(audio.on));
   });
+})();
+</script>
+
+<script>
+/* =========================================================
+   CAMPUS — an isometric site plan you can pan, zoom and turn.
+   Canvas 2D, painter's algorithm, colour-buffer picking.
+   ========================================================= */
+(function(){
+  "use strict";
+  var cv = document.getElementById("campusCanvas");
+  if(!cv) return;
+  var ctx = cv.getContext("2d");
+  var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var GROUND = 44, CX = 22, CY = 22;   /* square plot, so 90° turns stay in frame */
+  var TILE = 26;                        /* base pixels per grid unit */
+
+  /* ---------- the site plan ---------- */
+  var BUILDINGS = [
+    { id:"gym", name:"Benchmark Hall", kind:"Testing", to:"exams",
+      x:1, y:3, w:11, d:8, h:3.2, type:"vault",
+      body:"The gymnasium. Where a kernel gets run until it stops being fast — the matmul rewrite was profiled here, four times over." },
+    { id:"atrium", name:"Research Atrium", kind:"Laboratory", to:"die",
+      x:19, y:4, w:9, d:6, h:3.0, type:"vault",
+      body:"Glass-roofed compute hall. The floorplan on this site is drawn the way this building is: a fixed area budget, argued over." },
+    { id:"labN", name:"Fabrication Annex", kind:"Laboratory", to:"die",
+      x:30, y:2, w:8, d:5, h:2.6, type:"flat", glass:true,
+      body:"Where silicon stops being an abstraction. Wafer handling, metrology, and a lot of waiting for a furnace." },
+    { id:"mainW", name:"Main Building · West Wing", kind:"Examination", to:"exams",
+      x:5, y:13, w:9, d:7, h:5.0, type:"flat", glass:true, court:"clay",
+      body:"Four special exams sat here, each with one constraint that could not be negotiated with: a memory budget, a deadline, a dataset that lied." },
+    { id:"mainC", name:"Main Building · Central Wing", kind:"Academic", to:"evaluation",
+      x:14.5, y:13, w:9, d:7, h:5.4, type:"flat", glass:true, court:"green",
+      body:"The evaluation board. Six traits, honest letter grades, and a rule that a grade only moves when something actually shipped." },
+    { id:"mainE", name:"Main Building · East Wing", kind:"Records", to:"log",
+      x:24, y:13, w:8, d:7, h:4.6, type:"flat", glass:true, court:"clay",
+      body:"The semester log — every term since the first CUDA kernel that ran slower than NumPy." },
+    { id:"dormA", name:"Dormitory A", kind:"Residence", to:"homeroom",
+      x:34, y:11, w:7, d:5, h:3.4, type:"flat", glass:true,
+      body:"Where most of the work actually happens, at hours the timetable does not acknowledge." },
+    { id:"dormB", name:"Dormitory B", kind:"Residence", to:"homeroom",
+      x:34, y:17, w:7, d:5, h:3.4, type:"flat", glass:true,
+      body:"The second block. Identical from the outside, which is rather the point of the place." },
+    { id:"library", name:"Records & Library", kind:"Archive", to:"sheet",
+      x:6, y:22, w:8, d:5, h:2.8, type:"flat", glass:true,
+      body:"Reference shelves and the contact sheet — the frames that did not make it into the final cut." },
+    { id:"gate", name:"Main Gate & Terminal", kind:"Access", to:"contact",
+      x:20, y:28, w:6, d:3, h:2.0, type:"flat",
+      body:"The way in, and the way out. Correspondence goes through here." }
+  ];
+
+  var PATHS = [
+    [{x:23,y:31},{x:23,y:22},{x:19,y:20.5}],
+    [{x:23,y:22},{x:31,y:22},{x:34,y:19}],
+    [{x:23,y:22},{x:14,y:22},{x:11,y:21}],
+    [{x:12,y:11},{x:20,y:11},{x:29,y:11}]
+  ];
+
+  /* ---------- palettes ---------- */
+  var DAY = {
+    grass:"#a9ca8c", grassAlt:"#9bbe7e", paved:"#d6dadf", paved2:"#c6cbd2",
+    plaza:"#dee1e6", track:"#c8664e", trackIn:"#9ec87f", water:"#93b6d8",
+    roof:"#eceff3", roofSide:"#c4cad2", roofDark:"#aeb5bf",
+    wall:"#e6e9ed", wallDark:"#ccd2da",
+    glass:"#3f6fc4", glass2:"#6f9ad8", glassTop:"#cfe0f2",
+    courtGreen:"#7fae63", courtClay:"#c07a55", line:"#ffffff",
+    sakura:"#f0b9cf", conifer:"#4f7a52", tree:"#719c60",
+    person:"#3b4048", outline:"#0d0d0f", pick:"#000000"
+  };
+  var NIGHT = {
+    grass:"#1a2620", grassAlt:"#16211c", paved:"#1b1f26", paved2:"#161a20",
+    plaza:"#1e222a", track:"#3d2521", trackIn:"#1c2a1e", water:"#0d1621",
+    roof:"#2b313b", roofSide:"#1f242c", roofDark:"#191d24",
+    wall:"#262c35", wallDark:"#1b2028",
+    glass:"#1d2b47", glass2:"#26375a", glassTop:"#2c3a52",
+    courtGreen:"#26361f", courtClay:"#3a281f", line:"#4a525e",
+    sakura:"#3f2733", conifer:"#1d2b21", tree:"#22301f",
+    person:"#7e8794", outline:"#000000", pick:"#000000"
+  };
+  var P = DAY, night = false;
+
+  /* ---------- camera ---------- */
+  var cam = { x:21, y:17, zoom:1 }, rot = 0;
+  var target = null;
+
+  function rotate(p, r){
+    var dx = p.x - CX, dy = p.y - CY;
+    if(r === 1) return { x:CX + dy, y:CY - dx };
+    if(r === 2) return { x:CX - dx, y:CY - dy };
+    if(r === 3) return { x:CX - dy, y:CY + dx };
+    return { x:p.x, y:p.y };
+  }
+  var W = 0, H = 0, dpr = 1;
+
+  function iso(p){ return { X:(p.x - p.y) * 0.5, Y:(p.x + p.y) * 0.25 }; }
+  function scr(gx, gy, gz){
+    var r = iso(rotate({x:gx, y:gy}, rot));
+    var c = iso(rotate({x:cam.x, y:cam.y}, rot));
+    var s = TILE * cam.zoom;
+    return [ (r.X - c.X) * s + W/2, (r.Y - c.Y - (gz||0) * 0.42) * s + H/2 ];
+  }
+  /* screen delta -> world delta, accounting for the current turn */
+  function panBy(dx, dy){
+    var s = TILE * cam.zoom;
+    var rX = -dx / s, rY = -dy / s;
+    var wx = rX + 2 * rY, wy = -rX + 2 * rY;
+    var inv = (4 - rot) % 4;
+    var d = rotate({ x:CX + wx, y:CY + wy }, inv);
+    cam.x += d.x - CX; cam.y += d.y - CY;
+    cam.x = Math.max(-4, Math.min(GROUND + 4, cam.x));
+    cam.y = Math.max(-4, Math.min(GROUND + 4, cam.y));
+  }
+
+  /* ---------- primitives ---------- */
+  function poly(c, pts, fill, stroke, lw){
+    c.beginPath();
+    for(var i=0;i<pts.length;i++){
+      var s = scr(pts[i].x, pts[i].y, pts[i].z || 0);
+      if(i === 0) c.moveTo(s[0], s[1]); else c.lineTo(s[0], s[1]);
+    }
+    c.closePath();
+    if(fill){ c.fillStyle = fill; c.fill(); }
+    if(stroke){ c.strokeStyle = stroke; c.lineWidth = lw || 1; c.stroke(); }
+  }
+  function ellipsePts(cx, cy, rx, ry, n){
+    var out = [];
+    for(var i=0;i<n;i++){
+      var a = i / n * Math.PI * 2;
+      out.push({ x:cx + Math.cos(a) * rx, y:cy + Math.sin(a) * ry });
+    }
+    return out;
+  }
+  function rng(seed){
+    var s = seed;
+    return function(){ s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+  }
+  function face(c, a, b, z0, z1, fill){
+    poly(c, [ {x:a.x,y:a.y,z:z0}, {x:b.x,y:b.y,z:z0}, {x:b.x,y:b.y,z:z1}, {x:a.x,y:a.y,z:z1} ], fill);
+  }
+
+  /* ---------- buildings ---------- */
+  function corners(b){
+    return {
+      a:{x:b.x,       y:b.y      }, bb:{x:b.x + b.w, y:b.y      },
+      c:{x:b.x + b.w, y:b.y + b.d}, d:{x:b.x,        y:b.y + b.d}
+    };
+  }
+  function drawFlat(c, b, flatColor){
+    var k = corners(b), h = b.h;
+    var wallA = flatColor || (b.glass ? P.glass : P.wall);
+    var wallB = flatColor || (b.glass ? P.glass2 : P.wallDark);
+
+    /* the two faces the viewer can see, given the fixed iso angle */
+    if(flatColor){
+      face(c, k.bb, k.c, 0, h, flatColor);
+      face(c, k.c, k.d, 0, h, flatColor);
+      poly(c, [ {x:k.a.x,y:k.a.y,z:h},{x:k.bb.x,y:k.bb.y,z:h},{x:k.c.x,y:k.c.y,z:h},{x:k.d.x,y:k.d.y,z:h} ], flatColor);
+      return;
+    }
+    /* glazing reads as stacked horizontal bands, like the reference */
+    var floors = Math.max(2, Math.round(h * 1.6));
+    var rand = rng(b.id.length * 977 + b.x * 31 + b.y);
+    [[k.bb, k.c, wallA, 1], [k.c, k.d, wallB, 0.86]].forEach(function(f){
+      var A = f[0], B = f[1];
+      for(var i=0;i<floors;i++){
+        var z0 = h * (i / floors), z1 = h * ((i + 0.62) / floors);
+        face(c, A, B, z0, z1, b.glass ? f[2] : shade(P.wall, f[3]));
+        face(c, A, B, z1, h * ((i + 1) / floors), shade(f[2], night ? 0.7 : 1.14));
+        if(night && b.glass){
+          for(var w=0; w<6; w++){
+            if(rand() > 0.42) continue;
+            var t0 = w / 6 + 0.02, t1 = t0 + 0.1;
+            var pa = { x:A.x + (B.x - A.x) * t0, y:A.y + (B.y - A.y) * t0 };
+            var pb = { x:A.x + (B.x - A.x) * t1, y:A.y + (B.y - A.y) * t1 };
+            face(c, pa, pb, z0 + (z1 - z0) * 0.2, z1, rand() > 0.6 ? "#d9b46a" : "#8fb0e8");
+          }
+        }
+      }
+    });
+    /* roof */
+    poly(c, [ {x:k.a.x,y:k.a.y,z:h},{x:k.bb.x,y:k.bb.y,z:h},{x:k.c.x,y:k.c.y,z:h},{x:k.d.x,y:k.d.y,z:h} ], P.roof);
+    if(b.court){
+      var m = 0.9;
+      var q = [ {x:b.x+m,y:b.y+m,z:h+0.02},{x:b.x+b.w-m,y:b.y+m,z:h+0.02},
+                {x:b.x+b.w-m,y:b.y+b.d-m,z:h+0.02},{x:b.x+m,y:b.y+b.d-m,z:h+0.02} ];
+      poly(c, q, b.court === "green" ? P.courtGreen : P.courtClay, P.line, 1);
+      poly(c, [ {x:b.x+b.w/2,y:b.y+m,z:h+0.03},{x:b.x+b.w/2,y:b.y+b.d-m,z:h+0.03} ], null, P.line, 1);
+    } else if(!b.unit){
+      /* rooftop plant, like the boxy units in the reference */
+      var r2 = rng(b.x * 71 + b.y * 13);
+      for(var u=0;u<3;u++){
+        var ux = b.x + 0.8 + r2() * (b.w - 2.4), uy = b.y + 0.8 + r2() * (b.d - 2.2);
+        drawFlat(c, { id:b.id+u, unit:true, x:ux, y:uy, w:1.4, d:1.2, h:h + 0.5 }, null);
+      }
+    }
+  }
+  function drawVault(c, b, flatColor){
+    var base = b.h * 0.45, rise = b.h * 0.75, N = 26;
+    drawFlat(c, { id:b.id+"base", unit:true, x:b.x, y:b.y, w:b.w, d:b.d, h:base, glass:b.glass }, flatColor);
+    function arc(t, atX){
+      var ang = Math.PI * t;
+      return { x:atX, y:b.y + b.d/2 - (b.d/2) * Math.cos(ang), z:base + rise * Math.sin(ang) };
+    }
+    /* the visible curved surface as one silhouette */
+    var pts = [], i;
+    for(i=0;i<=N;i++) pts.push(arc(i/N, b.x));
+    for(i=N;i>=0;i--) pts.push(arc(i/N, b.x + b.w));
+    if(flatColor){ poly(c, pts, flatColor); return; }
+    var s0 = scr(b.x, b.y, base + rise), s1 = scr(b.x, b.y + b.d, base);
+    var g = c.createLinearGradient(s0[0], s0[1], s1[0], s1[1]);
+    g.addColorStop(0, P.glassTop); g.addColorStop(1, P.glass);
+    poly(c, pts, g);
+    for(i=1;i<N;i+=3){
+      poly(c, [ arc(i/N, b.x), arc(i/N, b.x + b.w) ], null, shade(P.glass, night ? 1.3 : 0.82), 1);
+    }
+    /* near end cap */
+    var cap = [];
+    for(i=0;i<=N;i++) cap.push(arc(i/N, b.x + b.w));
+    cap.push({ x:b.x + b.w, y:b.y + b.d, z:base });
+    cap.push({ x:b.x + b.w, y:b.y, z:base });
+    poly(c, cap, shade(P.glass, night ? 1.15 : 0.9));
+  }
+  function shade(hex, k){
+    var n = parseInt(hex.slice(1), 16);
+    var r = Math.min(255, Math.round((n >> 16) * k));
+    var g = Math.min(255, Math.round(((n >> 8) & 255) * k));
+    var b = Math.min(255, Math.round((n & 255) * k));
+    return "rgb(" + r + "," + g + "," + b + ")";
+  }
+  function depth(b){ return (b.x + b.w) + (b.y + b.d); }
+  function sorted(){
+    return BUILDINGS.slice().sort(function(a, b){
+      var ra = rotate({x:a.x + a.w/2, y:a.y + a.d/2}, rot);
+      var rb = rotate({x:b.x + b.w/2, y:b.y + b.d/2}, rot);
+      return (ra.x + ra.y) - (rb.x + rb.y);
+    });
+  }
+
+  /* ---------- trees ---------- */
+  var SAKURA = [], CONIFER = [];
+  (function(){
+    var r = rng(20240901);
+    for(var i=0;i<26;i++) SAKURA.push({ x:41.4 + r()*1.4, y:2 + i*1.15 + r()*0.4 });
+    for(var j=0;j<16;j++) SAKURA.push({ x:18 + j*1.25 + r()*0.4, y:31.6 + r()*1.2 });
+    for(var k=0;k<30;k++) CONIFER.push({ x:1 + k*1.45 + r()*0.5, y:0.4 + r()*1.1 });
+  })();
+  function blob(c, p, rx, ry, fill){
+    var s = scr(p.x, p.y, 0.9), s2 = scr(p.x, p.y, 0);
+    c.beginPath();
+    c.ellipse(s[0], s[1], rx * TILE * cam.zoom * 0.5, ry * TILE * cam.zoom * 0.5, 0, 0, 6.283);
+    c.fillStyle = fill; c.fill();
+    c.beginPath(); c.moveTo(s[0], s[1]); c.lineTo(s2[0], s2[1]);
+    c.strokeStyle = night ? "#141a14" : "#7d6a52"; c.lineWidth = Math.max(1, cam.zoom); c.stroke();
+  }
+
+  /* ---------- the static scene ---------- */
+  var cache = document.createElement("canvas");
+  var pickCv = document.createElement("canvas");
+  var pickCtx = pickCv.getContext("2d", { willReadFrequently:true });
+  var dirty = true;
+
+  function paintScene(c){
+    c.clearRect(0, 0, W, H);
+    /* sea beyond the north edge */
+    poly(c, [{x:-400,y:-400},{x:GROUND+400,y:-400},{x:GROUND+400,y:-2},{x:-400,y:-2}], P.water);
+    /* the plot */
+    poly(c, [{x:-2,y:-2},{x:GROUND+2,y:-2},{x:GROUND+2,y:GROUND+2},{x:-2,y:GROUND+2}], P.grass);
+    poly(c, [{x:2,y:1},{x:40,y:1},{x:40,y:30},{x:2,y:30}], P.paved);
+    poly(c, [{x:17,y:21},{x:33,y:21},{x:33,y:31},{x:17,y:31}], P.plaza);
+    /* running track */
+    poly(c, ellipsePts(9, 27, 8, 5.2, 56), P.track);
+    poly(c, ellipsePts(9, 27, 6.2, 3.6, 56), P.trackIn);
+    for(var t=1;t<5;t++) poly(c, ellipsePts(9, 27, 8 - t*0.36, 5.2 - t*0.23, 56), null, "rgba(255,255,255,.35)", 1);
+    /* footpaths */
+    PATHS.forEach(function(pp){
+      c.beginPath();
+      pp.forEach(function(q, i){
+        var s = scr(q.x, q.y, 0.02);
+        if(i === 0) c.moveTo(s[0], s[1]); else c.lineTo(s[0], s[1]);
+      });
+      c.strokeStyle = P.paved2; c.lineWidth = Math.max(2, 1.6 * TILE * cam.zoom * 0.14);
+      c.lineCap = "round"; c.stroke();
+    });
+    CONIFER.forEach(function(p){ blob(c, p, 0.9, 1.15, P.conifer); });
+    sorted().forEach(function(b){
+      (b.type === "vault" ? drawVault : drawFlat)(c, b, null);
+    });
+    SAKURA.forEach(function(p){ blob(c, p, 1.15, 0.85, P.sakura); });
+  }
+  function paintPick(){
+    pickCtx.setTransform(1, 0, 0, 1, 0, 0);
+    pickCtx.clearRect(0, 0, pickCv.width, pickCv.height);
+    pickCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var save = ctx; ctx = pickCtx;
+    sorted().forEach(function(b){
+      var i = BUILDINGS.indexOf(b) + 1;
+      var col = "rgb(" + i + ",90," + (200 - i) + ")";
+      (b.type === "vault" ? drawVault : drawFlat)(pickCtx, b, col);
+    });
+    ctx = save;
+  }
+  function rebuild(){
+    cache.width = pickCv.width = Math.round(W * dpr);
+    cache.height = pickCv.height = Math.round(H * dpr);
+    var cc = cache.getContext("2d");
+    cc.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var save = ctx; ctx = cc;
+    paintScene(cc);
+    ctx = save;
+    paintPick();
+    placePins();
+    dirty = false;
+  }
+
+  /* ---------- people ---------- */
+  var PEOPLE = [];
+  (function(){
+    var r = rng(77);
+    for(var i=0;i<46;i++){
+      var p = PATHS[i % PATHS.length];
+      PEOPLE.push({ path:p, t:r(), sp:(0.00006 + r() * 0.00012) * (r() > 0.5 ? 1 : -1) });
+    }
+  })();
+  function walk(dt){
+    for(var i=0;i<PEOPLE.length;i++){
+      var pe = PEOPLE[i];
+      pe.t += pe.sp * dt;
+      if(pe.t > 1) pe.t -= 1; else if(pe.t < 0) pe.t += 1;
+    }
+  }
+  function drawPeople(c){
+    var rad = Math.max(1.1, 1.9 * cam.zoom);
+    c.fillStyle = P.person;
+    for(var i=0;i<PEOPLE.length;i++){
+      var pe = PEOPLE[i], p = pe.path;
+      var seg = pe.t * (p.length - 1), k = Math.min(p.length - 2, Math.floor(seg)), f = seg - k;
+      var x = p[k].x + (p[k+1].x - p[k].x) * f, y = p[k].y + (p[k+1].y - p[k].y) * f;
+      var s = scr(x, y, 0.16);
+      c.beginPath(); c.arc(s[0], s[1], rad, 0, 6.283); c.fill();
+    }
+  }
+
+  /* ---------- pins ---------- */
+  var pinLayer = document.getElementById("pins");
+  var pins = {};
+  BUILDINGS.forEach(function(b){
+    var el = document.createElement("button");
+    el.className = "pin";
+    el.innerHTML = '<span class="pin-tag"></span><span class="pin-stem"></span><span class="pin-dot"></span>';
+    el.querySelector(".pin-tag").textContent = b.name.replace(/^Main Building · /, "");
+    el.addEventListener("click", function(e){ e.stopPropagation(); select(b.id, true); });
+    pinLayer.appendChild(el);
+    pins[b.id] = el;
+  });
+  function placePins(){
+    pinLayer.classList.toggle("compact", W < 900 && cam.zoom < fitZ * 1.6);
+    BUILDINGS.forEach(function(b){
+      var s = scr(b.x + b.w/2, b.y + b.d/2, b.h + 0.5);
+      var el = pins[b.id];
+      el.style.left = s[0] + "px";
+      el.style.top = s[1] + "px";
+      var off = s[0] < -60 || s[0] > W + 60 || s[1] < -40 || s[1] > H + 40;
+      el.style.visibility = off ? "hidden" : "visible";
+    });
+  }
+
+  /* ---------- loop ---------- */
+  var last = performance.now();
+  function frame(now){
+    var dt = Math.min(48, now - last); last = now;
+    if(target){
+      var k = 1 - Math.pow(0.0016, dt / 1000);
+      cam.x += (target.x - cam.x) * k;
+      cam.y += (target.y - cam.y) * k;
+      cam.zoom += (target.zoom - cam.zoom) * k;
+      if(Math.abs(target.x - cam.x) < 0.01 && Math.abs(target.zoom - cam.zoom) < 0.002){
+        cam.x = target.x; cam.y = target.y; cam.zoom = target.zoom; target = null;
+      }
+      dirty = true;
+    }
+    if(dirty) rebuild();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(cache, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if(!reduced){ walk(dt); drawPeople(ctx); }
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- sizing ---------- */
+  function resize(){
+    var r = cv.parentElement.getBoundingClientRect();
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    cv.style.width = W + "px"; cv.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fitView(!engaged);
+    dirty = true;
+  }
+
+  /* ---------- interaction ---------- */
+  var ptrs = new Map(), lastPt = null, pinchD = 0, engaged = false, moved = 0;
+  cv.addEventListener("pointerdown", function(e){
+    cv.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+    lastPt = { x:e.clientX, y:e.clientY }; moved = 0; engaged = true;
+    cv.classList.add("dragging");
+  });
+  cv.addEventListener("pointermove", function(e){
+    if(!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, { x:e.clientX, y:e.clientY });
+    if(ptrs.size === 2){
+      var v = Array.from(ptrs.values());
+      var d = Math.hypot(v[0].x - v[1].x, v[0].y - v[1].y);
+      if(pinchD) zoomTo(cam.zoom * (d / pinchD));
+      pinchD = d; dirty = true; return;
+    }
+    var dx = e.clientX - lastPt.x, dy = e.clientY - lastPt.y;
+    moved += Math.abs(dx) + Math.abs(dy);
+    lastPt = { x:e.clientX, y:e.clientY };
+    target = null; panBy(dx, dy); dirty = true;
+  });
+  function endPtr(e){
+    ptrs.delete(e.pointerId);
+    if(ptrs.size < 2) pinchD = 0;
+    cv.classList.remove("dragging");
+    if(moved < 5) pickAt(e);
+  }
+  cv.addEventListener("pointerup", endPtr);
+  cv.addEventListener("pointercancel", function(e){ ptrs.delete(e.pointerId); cv.classList.remove("dragging"); });
+
+  var fitZ = 1;
+  /* frame the whole plot, whichever way it is turned */
+  function fitView(apply){
+    var pts = [], minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9;
+    BUILDINGS.forEach(function(b){
+      [[b.x,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.d],[b.x,b.y+b.d]].forEach(function(q){
+        pts.push({ x:q[0], y:q[1], z:0 });
+        pts.push({ x:q[0], y:q[1], z:b.h * 1.35 });
+      });
+    });
+    /* the grounds that carry no building: track, plaza, the sakura walk */
+    [[1,21.8],[17,21.8],[17,32.2],[1,32.2],
+     [42.8,2],[42.8,31],[17,33],[38,33],
+     [2,1],[40,1]].forEach(function(q){ pts.push({ x:q[0], y:q[1], z:0 }); });
+    pts.forEach(function(q){
+      var r = iso(rotate(q, rot)), Y = r.Y - q.z * 0.42;
+      if(r.X < minX) minX = r.X;
+      if(r.X > maxX) maxX = r.X;
+      if(Y < minY) minY = Y;
+      if(Y > maxY) maxY = Y;
+    });
+    var sx = (maxX - minX) * TILE, sy = (maxY - minY) * TILE;
+    fitZ = Math.min(W / sx, H / sy) * 0.94;
+    if(!apply) return;
+    var X = (minX + maxX) / 2, Y = (minY + maxY) / 2;
+    var rx = X + 2 * Y, ry = -X + 2 * Y;
+    var wp = rotate({ x:rx, y:ry }, (4 - rot) % 4);
+    cam.x = wp.x; cam.y = wp.y; cam.zoom = fitZ; dirty = true;
+  }
+  function zoomTo(z){ cam.zoom = Math.max(fitZ * 0.75, Math.min(3.2, z)); dirty = true; }
+  cv.addEventListener("wheel", function(e){
+    if(!engaged) return;               /* let the page scroll until the map is used */
+    e.preventDefault();
+    target = null;
+    zoomTo(cam.zoom * (e.deltaY < 0 ? 1.12 : 0.89));
+  }, { passive:false });
+
+  function pickAt(e){
+    var r = cv.getBoundingClientRect();
+    var px = Math.round((e.clientX - r.left) * dpr), py = Math.round((e.clientY - r.top) * dpr);
+    if(px < 0 || py < 0 || px >= pickCv.width || py >= pickCv.height) return;
+    var d = pickCtx.getImageData(px, py, 1, 1).data;
+    if(d[3] < 8 || d[1] !== 90){ select(null); return; }
+    var b = BUILDINGS[d[0] - 1];
+    if(b) select(b.id, true); else select(null);
+  }
+
+  /* ---------- selection + card ---------- */
+  var card = document.getElementById("placeCard");
+  var current = null;
+  function select(id, fly){
+    current = id;
+    BUILDINGS.forEach(function(b){ pins[b.id].classList.toggle("active", b.id === id); });
+    [].forEach.call(document.querySelectorAll(".place-btn"), function(el){
+      el.classList.toggle("active", el.dataset.id === id);
+    });
+    if(!id){ card.classList.remove("open"); return; }
+    var b = BUILDINGS.filter(function(x){ return x.id === id; })[0];
+    document.getElementById("cardKind").textContent = b.kind;
+    document.getElementById("cardName").textContent = b.name;
+    document.getElementById("cardBody").textContent = b.body;
+    document.getElementById("cardFloors").textContent = Math.max(1, Math.round(b.h * 1.6));
+    document.getElementById("cardArea").textContent = Math.round(b.w * b.d * 25) + " m²";
+    var go = document.getElementById("cardGo");
+    go.textContent = "Open " + b.kind.toLowerCase() + " →";
+    go.onclick = function(){
+      var t = document.getElementById(b.to);
+      if(t) t.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block:"start" });
+    };
+    card.classList.add("open");
+    if(fly) target = { x:b.x + b.w/2, y:b.y + b.d/2, zoom:Math.max(cam.zoom, 1.35) };
+  }
+  document.getElementById("cardClose").addEventListener("click", function(){ select(null); });
+
+  /* ---------- directory ---------- */
+  var list = document.getElementById("placeList");
+  BUILDINGS.forEach(function(b){
+    var el = document.createElement("button");
+    el.className = "place-btn"; el.type = "button"; el.dataset.id = b.id;
+    el.textContent = b.name.replace(/^Main Building · /, "");
+    el.addEventListener("click", function(){ engaged = true; select(b.id, true); });
+    list.appendChild(el);
+  });
+
+  /* ---------- controls ---------- */
+  document.getElementById("btnIn").addEventListener("click", function(){ engaged = true; zoomTo(cam.zoom * 1.25); });
+  document.getElementById("btnOut").addEventListener("click", function(){ engaged = true; zoomTo(cam.zoom * 0.8); });
+  document.getElementById("btnReset").addEventListener("click", function(){
+    rot = 0; setCompass(); fitView(true); select(null);
+  });
+  var COMPASS = ["N", "E", "S", "W"];
+  function setCompass(){
+    document.querySelector("#btnRotate i").textContent = "▲" + COMPASS[rot];
+  }
+  document.getElementById("btnRotate").addEventListener("click", function(){
+    rot = (rot + 1) % 4; setCompass();
+    if(engaged){ fitView(false); dirty = true; } else { fitView(true); }
+  });
+  var dirBox = document.querySelector(".places"), dirBtn = document.getElementById("btnDir");
+  function setDir(open){
+    dirBox.classList.toggle("shut", !open);
+    dirBtn.setAttribute("aria-expanded", String(open));
+    dirBtn.querySelector("b").innerHTML = open ? "&minus;" : "+";
+  }
+  dirBtn.addEventListener("click", function(){
+    setDir(dirBox.classList.contains("shut"));
+  });
+  setDir(innerWidth > 880);
+
+  var labelsOn = true;
+  document.getElementById("btnLabels").addEventListener("click", function(){
+    labelsOn = !labelsOn;
+    pinLayer.classList.toggle("hide-labels", !labelsOn);
+    this.setAttribute("aria-pressed", String(labelsOn));
+    this.classList.toggle("on", labelsOn);
+  });
+  document.getElementById("btnLabels").classList.add("on");
+
+  /* ---------- theme ---------- */
+  function readTheme(){
+    var a = document.documentElement.getAttribute("data-theme");
+    var isDark = a === "dark" || (!a && matchMedia("(prefers-color-scheme: dark)").matches);
+    if(isDark !== night){ night = isDark; P = night ? NIGHT : DAY; dirty = true; }
+  }
+  new MutationObserver(readTheme).observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readTheme);
+
+  /* ---------- boot ---------- */
+  readTheme(); setCompass(); resize(); fitView(true);
+  addEventListener("resize", resize);
+  requestAnimationFrame(frame);
 })();
 </script>
