@@ -10,75 +10,84 @@
    TOKENS — light is the 08:20 classroom, dark is the 21:00 dorm
    =========================================================== */
 :root{
-  --ground:#edeff3;
-  --surface:#f7f8fa;
-  --surface-2:#e3e7ed;
-  --ink:#14171d;
-  --ink-soft:#525a67;
-  --ink-faint:#8b929e;
-  --rule:#ccd2da;
-  --rule-soft:#dde2e8;
-  --navy:#2a3448;
-  --window:#a9bed4;
-  --mark:#a81f28;
+  --ground:#ffffff;
+  --surface:#fafafa;
+  --surface-2:#f1f1f2;
+  --ink:#0a0a0a;
+  --ink-soft:#4d4d50;
+  --ink-faint:#8b8b8f;
+  --rule:#d9d9dc;
+  --rule-soft:#e9e9eb;
+  --crimson:#a4003d;
+  --magenta:#e5007f;
+  --deep:#a4003d;
+  --window:#b8bcc4;
+  --mark:#e5007f;
   --sunhue:#c2853c;
-  --glass:rgba(247,248,250,.7);
-  --shaft:rgba(255,255,255,.85);
-  --mote:255,255,255;
-  --die-off:#d8dde4;
-  --frame:#14171d;
-  --wash-cool:rgba(150,178,206,.34);
-  --wash-warm:rgba(168,31,40,.05);
-  --grain:.055;
+  --glass:rgba(255,255,255,.74);
+  --shaft:rgba(229,0,127,.05);
+  --mote:240,170,205;
+  --die-off:#e6e6e8;
+  --frame:#0a0a0a;
+  --tile-line:#0a0a0a;
+  --wash-cool:rgba(164,0,61,.05);
+  --wash-warm:rgba(229,0,127,.05);
+  --grain:.045;
   --grain-blend:multiply;
   --sun:0;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --ground:#0d1015;
-    --surface:#151920;
-    --surface-2:#1b2028;
-    --ink:#e6eaf0;
-    --ink-soft:#939ba8;
-    --ink-faint:#646c79;
-    --rule:#272d36;
-    --rule-soft:#1d222a;
-    --navy:#7d93b8;
-    --window:#3f5273;
-    --mark:#cf3f47;
-    --sunhue:#c08d4e;
-    --glass:rgba(21,25,32,.7);
-    --shaft:rgba(150,185,230,.13);
-    --mote:190,215,245;
-    --die-off:#20252d;
-    --frame:#333941;
-    --wash-cool:rgba(70,105,155,.22);
-    --wash-warm:rgba(207,63,71,.06);
-    --grain:.10;
-    --grain-blend:overlay;
-  }
+  --ground:#0a0a0c;
+  --surface:#141416;
+  --surface-2:#1b1b1e;
+  --ink:#f3f3f5;
+  --ink-soft:#9a9aa0;
+  --ink-faint:#67676d;
+  --rule:#2b2b2f;
+  --rule-soft:#1f1f23;
+  --crimson:#f2578f;
+  --magenta:#e5007f;
+  --deep:#a4003d;
+  --window:#3c4048;
+  --mark:#e5007f;
+  --sunhue:#c08d4e;
+  --glass:rgba(20,20,22,.74);
+  --shaft:rgba(229,0,127,.10);
+  --mote:240,170,205;
+  --die-off:#232326;
+  --frame:#3a3a3f;
+  --tile-line:#f3f3f5;
+  --wash-cool:rgba(164,0,61,.13);
+  --wash-warm:rgba(229,0,127,.07);
+  --grain:.085;
+  --grain-blend:overlay;
+}
 }
 :root[data-theme="dark"]{
-    --ground:#0d1015;
-  --surface:#151920;
-  --surface-2:#1b2028;
-  --ink:#e6eaf0;
-  --ink-soft:#939ba8;
-  --ink-faint:#646c79;
-  --rule:#272d36;
-  --rule-soft:#1d222a;
-  --navy:#7d93b8;
-  --window:#3f5273;
-  --mark:#cf3f47;
+  --ground:#0a0a0c;
+  --surface:#141416;
+  --surface-2:#1b1b1e;
+  --ink:#f3f3f5;
+  --ink-soft:#9a9aa0;
+  --ink-faint:#67676d;
+  --rule:#2b2b2f;
+  --rule-soft:#1f1f23;
+  --crimson:#f2578f;
+  --magenta:#e5007f;
+  --deep:#a4003d;
+  --window:#3c4048;
+  --mark:#e5007f;
   --sunhue:#c08d4e;
-  --glass:rgba(21,25,32,.7);
-  --shaft:rgba(150,185,230,.13);
-  --mote:190,215,245;
-  --die-off:#20252d;
-  --frame:#333941;
-  --wash-cool:rgba(70,105,155,.22);
-  --wash-warm:rgba(207,63,71,.06);
-  --grain:.10;
+  --glass:rgba(20,20,22,.74);
+  --shaft:rgba(229,0,127,.10);
+  --mote:240,170,205;
+  --die-off:#232326;
+  --frame:#3a3a3f;
+  --tile-line:#f3f3f5;
+  --wash-cool:rgba(164,0,61,.13);
+  --wash-warm:rgba(229,0,127,.07);
+  --grain:.085;
   --grain-blend:overlay;
 }
 
@@ -141,7 +150,7 @@ h1,h2,h3,.mincho{
 p{margin:0 0 1.15em;}
 a{color:inherit;}
 :focus-visible{
-  outline:2px solid var(--navy);
+  outline:2px solid var(--crimson);
   outline-offset:3px;
   border-radius:1px;
 }
@@ -249,7 +258,29 @@ h2{font-size:clamp(26px,3.4vw,38px);line-height:1.3;margin:0 0 22px;}
   display:flex;gap:14px;align-items:center;margin-bottom:26px;
 }
 .eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--mark);}
+/* ---- the mark's own system: letters in cells, a few flooded ---- */
+.tiles{display:flex;gap:3px;}
+.tile{
+  display:grid;place-items:center;
+  width:var(--cell);height:var(--cell);
+  border:1px solid var(--tile-line);
+  background:var(--ground);color:var(--ink);
+  font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+  font-weight:700;font-size:calc(var(--cell) * .56);
+  line-height:1;text-transform:uppercase;
+  transition:background .45s cubic-bezier(.16,1,.3,1),color .45s,border-color .45s;
+}
+.tile.m{background:var(--magenta);border-color:var(--magenta);color:#fff;}
+.tile.c{background:var(--deep);border-color:var(--deep);color:#fff;}
+
 .namefield{
+  --cell:clamp(30px,6.4vw,66px);
+  margin:0 0 34px;display:flex;flex-direction:column;gap:3px;
+}
+.namefield .r2{margin-left:calc(var(--cell) + 3px);}
+.namefield .r3{margin-left:calc(var(--cell) * 3 + 9px);}
+
+.namefield-legacy{
   font-family:"Anton","Arial Narrow",Impact,sans-serif;
   font-size:clamp(42px,7.4vw,88px);
   font-weight:400; line-height:.94; letter-spacing:.004em;
@@ -283,14 +314,16 @@ h2{font-size:clamp(26px,3.4vw,38px);line-height:1.3;margin:0 0 22px;}
 .oaa-name em{display:block;font-style:normal;font-size:12px;color:var(--ink-faint);line-height:1.5;}
 .bar{height:2px;background:var(--rule-soft);position:relative;overflow:hidden;}
 .bar i{
-  position:absolute;inset:0 100% 0 0;background:var(--navy);
+  position:absolute;inset:0 100% 0 0;background:var(--crimson);
   transition:right 1.1s cubic-bezier(.16,1,.3,1);
 }
 .grade{
-  font-family:"Shippori Mincho B1",serif;font-size:26px;font-weight:600;
-  text-align:right;line-height:1;color:var(--ink);
+  font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+  font-weight:700;font-size:16px;letter-spacing:.01em;line-height:1;
+  width:44px;height:44px;display:grid;place-items:center;margin-left:auto;
+  border:1px solid var(--tile-line);color:var(--ink);
 }
-.grade.top{color:var(--mark);}
+.grade.top{background:var(--magenta);border-color:var(--magenta);color:#fff;}
 
 /* ==================== EXAMS / PROJECTS ==================== */
 .exam{
@@ -305,7 +338,13 @@ h2{font-size:clamp(26px,3.4vw,38px);line-height:1.3;margin:0 0 22px;}
 }
 .exam:hover::before{opacity:1;}
 .exam:last-of-type{border-bottom:1px solid var(--rule-soft);}
-.exam-no{font-family:"Anton",Impact,sans-serif;font-size:28px;color:var(--ink-faint);line-height:1;padding-top:2px;}
+.exam-no{
+  font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+  font-weight:700;font-size:15px;line-height:1;
+  width:44px;height:44px;display:grid;place-items:center;
+  border:1px solid var(--tile-line);color:var(--ink);
+}
+.exam:hover .exam-no{background:var(--magenta);border-color:var(--magenta);color:#fff;}
 .exam h3{font-size:20px;margin:0 0 8px;}
 .exam p{font-size:14.5px;color:var(--ink-soft);margin:0 0 12px;max-width:52ch;}
 .tools{display:flex;flex-wrap:wrap;gap:6px;}
@@ -316,7 +355,7 @@ h2{font-size:clamp(26px,3.4vw,38px);line-height:1.3;margin:0 0 22px;}
 .exam-out{border-left:1px solid var(--rule-soft);padding-left:22px;}
 .exam-out b{
   display:block;font-family:"Shippori Mincho B1",serif;font-size:29px;
-  line-height:1.1;color:var(--navy);font-weight:600;
+  line-height:1.1;color:var(--crimson);font-weight:600;
 }
 .exam-out span{font-size:12.5px;color:var(--ink-faint);line-height:1.5;display:block;margin-top:3px;}
 
@@ -330,9 +369,9 @@ h2{font-size:clamp(26px,3.4vw,38px);line-height:1.3;margin:0 0 22px;}
   aspect-ratio:1;background:var(--die-off);
   transition:background .5s cubic-bezier(.16,1,.3,1), transform .5s cubic-bezier(.16,1,.3,1);
 }
-.cell.hot{background:var(--navy);transform:scale(1.12);}
+.cell.hot{background:var(--crimson);transform:scale(1.12);}
 .cell.warm{background:var(--window);}
-.cell.idle{background:var(--window);opacity:.5;}
+.cell.idle{background:var(--magenta);opacity:.4;}
 .die-legend{display:flex;flex-direction:column;}
 .legend-item{
   text-align:left;background:none;border:0;border-bottom:1px solid var(--rule-soft);
@@ -340,7 +379,7 @@ h2{font-size:clamp(26px,3.4vw,38px);line-height:1.3;margin:0 0 22px;}
   display:flex;justify-content:space-between;align-items:baseline;gap:12px;
   transition:padding-left .4s cubic-bezier(.16,1,.3,1),color .4s;
 }
-.legend-item:hover,.legend-item.on{padding-left:11px;color:var(--navy);}
+.legend-item:hover,.legend-item.on{padding-left:11px;color:var(--crimson);}
 .legend-item small{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-faint);letter-spacing:.08em;}
 
 /* ==================== CONTACT SHEET ==================== */
@@ -371,7 +410,7 @@ h2{font-size:clamp(26px,3.4vw,38px);line-height:1.3;margin:0 0 22px;}
   line-height:1.5; color:transparent; max-width:34ch;
   transition:color .5s;
 }
-.slot:hover{background:var(--navy); border-color:var(--navy);}
+.slot:hover{background:var(--crimson); border-color:var(--crimson);}
 .slot:hover::before{opacity:.14;}
 .slot:hover .slot-tag{color:rgba(255,255,255,.72);}
 .slot:hover .slot-note{color:#fff;}
@@ -433,7 +472,7 @@ footer{
   font-size:10px;letter-spacing:.02em;transition:color .35s,border-color .35s;
 }
 .ctl:hover{color:var(--ink);border-color:var(--ink-faint);}
-.ctl.on{color:var(--mark);border-color:var(--mark);}
+.ctl.on{background:var(--magenta);border-color:var(--magenta);color:#fff;}
 
 /* ==================== CAMPUS MAP ==================== */
 .campus-frame{
@@ -502,7 +541,7 @@ footer{
   transition:padding-left .35s cubic-bezier(.16,1,.3,1),color .35s,background .35s;
 }
 .place-btn:last-child{border-bottom:0;}
-.place-btn:hover,.place-btn.active{padding-left:18px;color:var(--navy);background:var(--surface-2);}
+.place-btn:hover,.place-btn.active{padding-left:18px;color:var(--crimson);background:var(--surface-2);}
 
 .mbtn{
   width:34px;height:34px;border:1px solid var(--rule);background:var(--glass);
@@ -512,7 +551,7 @@ footer{
 }
 .mbtn:hover{color:var(--ink);border-color:var(--ink-faint);}
 .mbtn.wide{width:auto;padding:0 10px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;}
-.mbtn.on{color:var(--navy);border-color:var(--navy);}
+.mbtn.on{background:var(--magenta);border-color:var(--magenta);color:#fff;}
 .compass i{display:block;transition:transform .5s cubic-bezier(.16,1,.3,1);font-style:normal;}
 
 .legend{
@@ -537,7 +576,7 @@ footer{
 .card-top{padding:16px 16px 0;}
 .card-kind{
   font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--navy);
+  text-transform:uppercase;color:var(--crimson);
 }
 .card h3{font-size:17px;margin:6px 0 10px;line-height:1.32;}
 .card p{font-size:13.5px;color:var(--ink-soft);margin:0 0 14px;line-height:1.62;}
@@ -557,7 +596,7 @@ footer{
   font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;
   text-transform:uppercase;transition:background .3s;
 }
-.card-go:hover{background:var(--navy);}
+.card-go:hover{background:var(--crimson);}
 .card-close{
   position:absolute;top:10px;right:10px;width:24px;height:24px;border:0;
   background:none;color:var(--ink-faint);cursor:pointer;font-size:15px;line-height:1;
@@ -608,7 +647,7 @@ footer{
   letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);
 }
 .threed-msg a,.threed-msg button{
-  color:var(--navy);background:none;border:0;padding:0;cursor:pointer;
+  color:var(--crimson);background:none;border:0;padding:0;cursor:pointer;
   font:inherit;text-decoration:underline;text-underline-offset:3px;
 }
 
@@ -627,7 +666,7 @@ footer{
   letter-spacing:.07em;color:var(--ink-faint);line-height:1.85;
 }
 .plaque a{color:var(--ink-soft);}
-.plaque a:hover{color:var(--navy);}
+.plaque a:hover{color:var(--crimson);}
 
 .campus-frame.mode3d .pins,
 .campus-frame.mode3d .legend,
@@ -711,7 +750,11 @@ footer{
           <span class="dot"></span>
           <span class="mono">Second Year &nbsp;·&nbsp; Data Science &nbsp;·&nbsp; Class Register</span>
         </div>
-        <h1 class="namefield">Panam Williams Mballos</h1>
+        <h1 class="namefield" aria-label="Panam Williams Mballos">
+          <span class="tiles" aria-hidden="true"><span class="tile m">P</span><span class="tile">A</span><span class="tile">N</span><span class="tile c">A</span><span class="tile">M</span></span>
+          <span class="tiles r2" aria-hidden="true"><span class="tile">W</span><span class="tile m">I</span><span class="tile">L</span><span class="tile">L</span><span class="tile">I</span><span class="tile c">A</span><span class="tile">M</span><span class="tile">S</span></span>
+          <span class="tiles r3" aria-hidden="true"><span class="tile">M</span><span class="tile">B</span><span class="tile m">A</span><span class="tile">L</span><span class="tile">L</span><span class="tile c">O</span><span class="tile">S</span></span>
+        </h1>
         <p class="tagline">
           I study <b>data science</b> the way this school studies people: measure
           everything, assume nothing. Most of what I build ends up pointed at
@@ -762,10 +805,10 @@ footer{
             <button class="sw" id="sw3d" aria-pressed="false">3D</button>
           </div>
           <div class="legend">
-            <span><b style="background:#3c5f9e"></b>Glazing</span>
+            <span><b style="background:#6f7d8c"></b>Glazing</span>
             <span><b style="background:#7fae63"></b>Roof court</span>
-            <span><b style="background:#b8503f"></b>Track</span>
-            <span><b style="background:#f0b9cf"></b>Sakura</span>
+            <span><b style="background:#a4003d"></b>Track</span>
+            <span><b style="background:#f2a3c6"></b>Sakura</span>
           </div>
         </div>
 
@@ -1295,12 +1338,12 @@ footer{
   /* ---------- palettes ---------- */
   var DAY = {
     grass:"#a9ca8c", grassAlt:"#9bbe7e", paved:"#d6dadf", paved2:"#c6cbd2",
-    plaza:"#dee1e6", track:"#b8503f", trackIn:"#98c079", water:"#9db9d4",
+    plaza:"#dee1e6", track:"#a4003d", trackIn:"#98c079", water:"#aab4bf",
     roof:"#eceff3", roofSide:"#c4cad2", roofDark:"#aeb5bf",
     wall:"#e6e9ed", wallDark:"#ccd2da",
-    glass:"#3c5f9e", glass2:"#6b8cc4", glassTop:"#cddcec",
+    glass:"#6f7d8c", glass2:"#93a0ad", glassTop:"#c6cdd4",
     courtGreen:"#7fae63", courtClay:"#c07a55", line:"#ffffff",
-    sakura:"#f0b9cf", conifer:"#4f7a52", tree:"#719c60",
+    sakura:"#f2a3c6", conifer:"#4f7a52", tree:"#719c60",
     person:"#3b4048", outline:"#0d0d0f", pick:"#000000"
   };
   var NIGHT = {
