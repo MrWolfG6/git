@@ -45,6 +45,28 @@ jobs:
         #      unless its deployment-branch policy is widened.
         uses: actions/configure-pages@v5
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/portfolio/package-lock.json
+
+      # The repository root is a static site with no build step; the 3D
+      # portfolio is a Vite app. Build it and stage its output into the root
+      # under /portfolio, so one artifact carries both.
+      - name: Build the portfolio
+        working-directory: apps/portfolio
+        run: |
+          npm ci
+          npm run build
+
+      - name: Stage the portfolio
+        run: |
+          rm -rf portfolio
+          mkdir -p portfolio
+          cp -r apps/portfolio/dist/. portfolio/
+
       - name: Upload the site
         uses: actions/upload-pages-artifact@v3
         with:
