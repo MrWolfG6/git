@@ -154,151 +154,128 @@ no horizontal body scroll at any width, zero dependencies.
 ```
 
 ---
+## 3. Your avatar — built from your six photos
 
-## 3. Your avatar, from the 11.11.23 photos
+**I cannot generate the image.** This session has no image tool, so what follows
+is the prompt, written against your actual face rather than a template. Paste it
+into a generator with your photos attached as reference.
 
-### 3a. What I can read from the poster
+### 3a. What your photos actually show
 
-Fill in the gaps marked **?** — those are the ones an image model will invent.
+Read from the graduation shot, the blue-suit shot, the two selfies, the
+black-and-white one, and the desk shot.
 
-```
-Skin          deep brown, warm undertone; even, matte, no heavy contouring
-Face shape    oval, tapering to a narrow well-defined chin; high cheekbones;
-              slim jaw, not heavy
-Hairline      squared-off lineup with sharp corners at the temples — a crisp
-              straight front edge. This is a strong identity marker. Keep it.
-Hair          short natural 4-type coils, dense and matte, fuller on top with a
-              tapered fade at the sides and back. No part, no product shine.
-Eyebrows      dark, medium thickness, close to the eye, gentle low arch
-Eyes          ? — hidden behind sunglasses in all six frames. NEED A PHOTO.
-Nose          medium bridge, rounded tip, moderately wide at the nostrils
-Lips          full, both lips, clear cupid's bow, defined vermilion border
-Facial hair   sparse and light — faint moustache shadow, a small patch below
-              the lower lip. No full beard. Do not let a model add one.
-Ears          medium, sitting close to the head
-Build         slim, long-limbed, narrow shoulders, tall impression, easy posture
-Marks         ? — any mole, freckle or scar? Name it. In a stylised drawing
-              these are the strongest likeness signal you have.
-```
+| Feature | What to draw |
+|---|---|
+| Face shape | Long oval, narrow through the cheeks. The lower third is long — a genuinely long face, not a round one. Tapered chin, defined but slim jaw with no heaviness |
+| Skin | Deep brown, warm undertone, even. Takes a hard specular highlight on the forehead, nose bridge and cheekbones — that sheen is part of the likeness, do not matte it out |
+| Hairline | **The single strongest marker.** A very sharp, straight, squared lineup across the forehead with crisp right-angled corners at the temples. Barber-clean. Get this wrong and it stops being you |
+| Hair | Very short black coils, low taper at the sides, almost no height |
+| Forehead | Tall and broad, which the squared lineup emphasises |
+| Eyebrows | Dark, moderate thickness, close to the eye, near-straight with only a gentle arch, clear gap between them |
+| Eyes | Almond, **hooded upper lids**, dark brown, outer corners tilting slightly down. Level, unhurried gaze. Faintly asymmetric — the left reads a touch more open |
+| Nose | Medium-wide base, moderately flared nostrils, rounded tip, low-to-medium bridge |
+| Lips | Fuller lower lip, defined cupid's bow, neutral resting line, lip border a shade darker than the surrounding skin |
+| Facial hair | Sparse and light — faint moustache shadow, light stubble along the chin and jaw edge. Do not draw a full beard |
+| Ears | Medium, sitting close to the head |
+| Neck & build | Long slim neck, lean build, narrow shoulders, tall impression |
+| Signature | **Wireless earbuds.** They appear in three of six photos. Keep one visible |
 
-**Signature objects — these three carry the character:**
+**Three things that must not change.** Stylisation eats these first:
 
-1. **Round gold-frame sunglasses with blue-tinted lenses.** Thin wire rim, keyhole
-   bridge. The single most recognisable thing about you.
-2. **A silver chain with an Africa-shaped pendant**, hanging around sternum height.
-3. **A black watch on the left wrist.**
+1. The squared, razor-straight lineup.
+2. The hooded, slightly downturned eye shape.
+3. The depth of the skin tone.
 
-**Wardrobe:** cobalt two-piece — a collarless band-neck top with a short placket,
-three-quarter sleeves and a left chest pocket, matching straight-leg trousers,
-black suede loafers worn without visible socks.
+One free observation: your resting expression across every photo is already
+composed, level and faintly detached. That is Ayanokouji's entire register. Do
+not let a generator add a smile — you are closer to the character as you are.
 
-### 3b. The gap, and why it's actually useful
+### 3b. The uniform, sampled from your reference
 
-You're wearing the sunglasses in **all six frames**, so I can't specify your eye
-shape, tilt or lid — and that's precisely the feature stylisation distorts most.
+Colours pulled from the pixels of the Ayanokouji image, not remembered:
 
-So do both:
-
-- **Send one photo without the sunglasses**, front-on and neutral, so the eyes
-  can be specified for the two or three renders that need them.
-- **Keep the sunglasses on for most of the set anyway.** They solve the hardest
-  problem in AI character work — likeness drifting between images — because the
-  glasses are a fixed, high-contrast, easily-reproduced shape. And a character
-  whose eyes you rarely see is *exactly* the Classroom of the Elite register:
-  composed, readable to no one. The trait and the technique agree.
-
-### 3c. The image prompt
-
-```
-Anime character portrait in the visual style of the Classroom of the Elite
-anime adaptation. Muted, restrained, realistically proportioned anime.
-NOT big-eyed moe. NOT shonen action art.
-
-STYLE
-Thin, precise, even-weight linework with no heavy outer contour.
-Soft two-tone cel shading, one soft-edged shadow pass. No rim light, no glow,
-no lens flare, no speed lines, no outline glow.
-Desaturated cool palette with cobalt blue as the only saturated colour.
-Realistic head-to-body ratio, roughly 1:7.5. Realistic eye size and spacing.
-Calm, closed-mouth, faintly detached expression. Composed, not smiling.
-
-SUBJECT
-A young Black man, early twenties. Deep brown skin with a warm undertone,
-matte and even. Oval face tapering to a narrow, well-defined chin; high
-cheekbones; a slim jaw. Short dense natural 4-type coils, fuller on top with a
-clean tapered fade at the sides, and a sharp squared-off lineup with crisp
-corners at the temples. Dark medium-thick eyebrows with a low gentle arch,
-sitting close to the eye. Medium nose bridge, rounded tip, moderately wide
-nostrils. Full lips with a clear cupid's bow. Sparse light facial hair — a
-faint moustache and a small patch below the lower lip, no beard. Slim,
-long-limbed build with narrow shoulders; relaxed upright posture.
-[ADD YOUR EYE SHAPE AND ANY MOLES / FRECKLES / SCARS HERE]
-
-ALWAYS PRESENT
-Round gold wire-frame sunglasses with blue-tinted lenses, thin rim, keyhole
-bridge. A fine silver chain with a small silver Africa-shaped pendant at
-sternum height. A black wristwatch on the left wrist.
-
-WARDROBE
-A cobalt blue two-piece set: a collarless band-neck top with a short buttoned
-placket, three-quarter sleeves and a left chest pocket, with matching
-straight-leg trousers. Black suede loafers, no visible socks.
-The cobalt is the only saturated colour in the frame.
-
-LIGHT AND FRAMING
-Late-afternoon light from a window at camera left, low angle. Cool ambient
-fill. Faint dust visible in the beam. Flat low-contrast background with soft
-depth-of-field falloff. Upper body, three-quarter turn, eye level.
-
-DO NOT
-Do not enlarge the eyes. Do not slim or reshape the jaw. Do not lighten the
-skin. Do not remove or smooth moles, freckles or scars. Do not add a beard.
-Do not add a smile. Do not add glow, sparkles, neon, or a busy background.
-Do not change the cobalt to teal, navy or purple.
-```
-
-### 3d. The nine renders the site needs
-
-These map one-to-one onto the Contact Sheet slots already built into the page.
-
-| Slot | Shot | Prompt add-on |
+| Piece | Hex | Notes |
 |---|---|---|
-| 01 | Hero portrait | three-quarter turn, chin slightly up, looking past the viewer |
-| 02 | Full figure | standing, one hand in pocket, weight on the back foot, full height |
-| 03 | Eyeline crop | letterbox band across the sunglasses and brow only |
-| 04 | Overhead | shot from above looking up at camera, arms loose — the poster's lower-left pose |
-| 05 | Line art | same portrait, strokes only, no fill — loading states and favicon |
-| 06 | Pendant detail | close crop on chain and Africa pendant against cobalt fabric, no face |
-| 07 | With the cat | cat held up at eye level, both arms raised, head tilted toward it |
-| 08 | Back turned | walking away down a corridor, silhouette — for End of Day |
-| 09 | Neutral bust | flat grey ground, front-facing — the student ID card |
+| Blazer | `#A5414B` | Brick-wine red. Notched lapels, single-breasted, **worn open** |
+| Lapel piping | `#C4A47C` | Soft antique gold, a thin line along the lapel edge and pocket flaps; gold buttons at the cuff |
+| Shirt | `#FFFFFF` | White, top button undone |
+| Necktie | `#2D4B91` | Royal blue, **worn loose**, knot pulled well down |
+| Trousers | `#377369` | Pine-teal green, straight leg, slight break |
+| Loafers | `#734155` | Oxblood |
 
-Export every one as **PNG with a transparent background.** The light shafts and
-atmosphere live in CSS, not baked into the image — that's what lets the sun move.
+The way he wears it matters as much as the colours: blazer open, tie loosened,
+one hand in a pocket, posture relaxed to the point of slouching.
 
-**Slot 07 is the important one.** The cat photo is the only frame in the poster
-where the composure drops. Every other image says "measured"; that one says
-there's a person behind it. Put it on the 404 page.
+### 3c. The prompt
 
-### 3e. Tools, ranked by how well they hold a face
+```
+Anime character portrait in the style of the Classroom of the Elite anime
+adaptation. Muted, restrained, realistic proportions — NOT big-eyed moe, NOT
+shonen action art.
 
-1. **Midjourney** — `--cref <your image URL> --cw 80`. Best likeness control.
-   Use `--cw 80` not 100, so the wardrobe can change while the face doesn't.
-2. **NanoBanana / Gemini image editing** — best at "keep this exact face, change
-   the pose". Strongest option for building the set from one locked portrait.
-3. **Stable Diffusion + IP-Adapter FaceID**, plus a LoRA trained on ~20 photos.
-   Most control, most work, fully reproducible seeds.
-4. **Leonardo.ai Character Reference** — easiest to start.
+SUBJECT — a Nigerian university student, late teens / early twenties.
+Long oval face, narrow through the cheeks, with a noticeably long lower third,
+a tapered chin and a defined but slim jaw. Deep brown skin with a warm
+undertone, even in tone, catching a bright specular highlight on the forehead,
+nose bridge and cheekbones. Very short black tightly-coiled hair, low taper at
+the sides, with a SHARP STRAIGHT SQUARED LINEUP across the forehead — crisp
+right-angled corners at the temples, barber-clean. Tall broad forehead. Dark
+near-straight eyebrows of moderate thickness sitting close to the eye. Almond
+eyes with hooded upper lids, dark brown irises, outer corners tilting slightly
+downward, gaze level and unhurried. Medium-wide nose with a rounded tip and
+moderately flared nostrils. Fuller lower lip, defined cupid's bow, lip border
+slightly darker than the surrounding skin. Sparse light stubble on the chin and
+along the jaw edge only. Long slim neck, lean build, narrow shoulders.
+One wireless earbud visible in the ear.
+Expression: calm, composed, closed-mouth, faintly detached. Not smiling.
 
-Generate the whole set in **one session, one seed, one reference.** Faces drift
-between sessions, and a lookbook of nine slightly different people is worse than
-no lookbook.
+WARDROBE — the Advanced Nurturing High School uniform.
+Brick-wine red blazer #A5414B with notched lapels, worn OPEN, thin antique-gold
+piping #C4A47C along the lapel edges and pocket flaps and gold buttons at the
+cuffs. White shirt, top button undone. Royal blue necktie #2D4B91 worn loose
+with the knot pulled well down. Pine-teal green trousers #377369, straight leg.
+Oxblood loafers #734155.
 
-**The hard rule:** it has to be *you*, drawn. If it comes out a generic anime
-boy, the takeaway becomes "nice template" instead of "I remember that person" —
-and remembering the person is the entire return on this project.
+STYLE — thin precise even-weight linework with no heavy outer contour. Soft
+two-tone cel shading, one soft-edged shadow pass. No rim light, no glow, no
+lens flare, no speed lines. Desaturated cool palette with blue-grey shadows.
+Realistic head-to-body proportion near 1:7.5. Realistic eye size, detailed iris
+with a soft gradient and one small highlight, thin restrained lashes.
+Flat low-contrast background with soft depth-of-field falloff.
 
----
+LIGHTING — late-afternoon light from a window at camera left, low angle, cool
+ambient fill, faint dust visible in the beam.
+
+DO NOT enlarge the eyes. DO NOT slim or reshape the jaw. DO NOT lighten the
+skin tone. DO NOT straighten or soften the squared hairline. DO NOT remove the
+hooded eyelids. DO NOT add a smile, glow, sparkles, or a busy background.
+```
+
+### 3d. Getting it into the site
+
+The hero already has a slot waiting. Save the render as a **transparent PNG** at:
+
+```
+portfolio/img/avatar.png
+```
+
+Commit it and it appears automatically — the page checks for the file and lays
+out around it. Until the file exists the hero simply renders without it, so
+nothing breaks in the meantime. Full-body works best; the frame is portrait.
+
+### 3e. The rest of the set
+
+Once one render looks like you, keep the same seed and reference and pull:
+a seated-at-a-desk three-quarter, a neutral bust for the student ID, three
+expressions (neutral / faint smile / thinking), a back-turned silhouette, and a
+line-art-only version. Transparent PNGs throughout, so atmosphere stays in CSS.
+
+Tools that hold a face across a set, best first: Midjourney with
+`--cref <image url> --cw 80`; NanoBanana or Gemini image editing for
+"keep this face, change the pose"; Stable Diffusion with IP-Adapter FaceID plus
+a LoRA trained on ~20 of your photos; Leonardo.ai Character Reference for the
+least setup.
 
 ## 4. Interaction spec — calm but never inert
 
