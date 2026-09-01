@@ -446,7 +446,7 @@ footer{
 .pins.compact .pin{transform:translate(-50%,-50%);}
 
 /* map furniture */
-.map-ui{position:absolute;pointer-events:none;}
+.map-ui{position:absolute;pointer-events:none;z-index:4;}
 .map-ui > *{pointer-events:auto;}
 .map-tl{top:14px;left:14px;max-width:230px;}
 .map-br{bottom:14px;right:14px;display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
@@ -545,10 +545,67 @@ footer{
 
 @media (max-width:880px){
   .campus-frame{height:clamp(420px,62vh,560px);}
+  .plaque{max-width:190px;padding:7px 9px;}
+  .plaque b{font-size:11px;}
   .map-tl{max-width:150px;}
   .card{width:calc(100% - 28px);top:auto;bottom:14px;right:14px;}
   .legend{display:none;}
 }
+
+/* --- Plan / 3D layer switch, and the Sketchfab model layer --- */
+.switcher{
+  display:flex;border:1px solid var(--rule);background:var(--glass);
+  backdrop-filter:blur(12px);margin-bottom:6px;
+}
+.sw{
+  background:none;border:0;cursor:pointer;color:var(--ink-soft);
+  font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;padding:8px 13px;transition:color .3s,background .3s;
+}
+.sw + .sw{border-left:1px solid var(--rule-soft);}
+.sw:hover{color:var(--ink);}
+.sw.on{background:var(--ink);color:var(--ground);}
+
+.threed{position:absolute;inset:0;z-index:1;display:none;background:var(--surface-2);}
+.campus-frame.mode3d .threed{display:block;}
+.threed iframe{
+  display:block;width:100%;height:100%;border:0;
+  position:relative;z-index:1;background:transparent;
+}
+.threed-msg{
+  position:absolute;inset:0;z-index:0;display:grid;place-items:center;
+  padding:34px;text-align:center;background:var(--surface-2);
+}
+.threed-msg p{
+  margin:0;max-width:38ch;line-height:2;
+  font-family:"JetBrains Mono",monospace;font-size:10px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);
+}
+.threed-msg a,.threed-msg button{
+  color:var(--cobalt);background:none;border:0;padding:0;cursor:pointer;
+  font:inherit;text-decoration:underline;text-underline-offset:3px;
+}
+
+.plaque{
+  position:absolute;right:14px;bottom:14px;z-index:3;display:none;
+  max-width:290px;text-align:right;background:var(--glass);
+  backdrop-filter:blur(12px);border:1px solid var(--rule);padding:9px 12px;
+}
+.campus-frame.mode3d .plaque{display:block;}
+.plaque b{
+  display:block;font-family:"Shippori Mincho B1","Yu Mincho",Georgia,serif;
+  font-size:13px;font-weight:600;margin-bottom:2px;
+}
+.plaque span{
+  display:block;font-family:"JetBrains Mono",monospace;font-size:8.5px;
+  letter-spacing:.07em;color:var(--ink-faint);line-height:1.85;
+}
+.plaque a{color:var(--ink-soft);}
+.plaque a:hover{color:var(--cobalt);}
+
+.campus-frame.mode3d .pins,
+.campus-frame.mode3d .legend,
+.campus-frame.mode3d .map-br{display:none;}
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width:880px){
@@ -651,15 +708,19 @@ footer{
       <div class="sec-head">
         <span class="mono">01 &mdash; Campus</span><hr>
       </div>
-      <h2>The grounds, from above.</h2>
+      <h2>Advanced Nurturing High School.</h2>
       <p class="col" style="color:var(--ink-soft);margin-bottom:34px;">
-        Every building here is a part of this site. Drag to pan, scroll to zoom,
-        turn the compass to change the approach &mdash; then open a structure to
-        go where it leads.
+        The school this site borrows its manners from &mdash; everything measured,
+        nothing announced. Ten structures, each one a part of this portfolio.
+        Drag to pan, scroll to zoom, turn the compass; or switch to <b>3D</b> and
+        walk the model itself.
       </p>
 
       <div class="campus-frame">
         <canvas id="campusCanvas"></canvas>
+        <div class="threed" id="threed">
+          <div class="threed-msg" id="threedMsg"><p>Loading the campus model&hellip;</p></div>
+        </div>
         <div class="pins" id="pins"></div>
 
         <div class="map-ui map-tl">
@@ -670,6 +731,10 @@ footer{
         </div>
 
         <div class="map-ui map-bl">
+          <div class="switcher" role="group" aria-label="Campus view">
+            <button class="sw on" id="swPlan" aria-pressed="true">Plan</button>
+            <button class="sw" id="sw3d" aria-pressed="false">3D</button>
+          </div>
           <div class="legend">
             <span><b style="background:#3f6fc4"></b>Glazing</span>
             <span><b style="background:#7fae63"></b>Roof court</span>
@@ -684,6 +749,14 @@ footer{
           <button class="mbtn" id="btnIn" title="Zoom in">+</button>
           <button class="mbtn" id="btnOut" title="Zoom out">&minus;</button>
           <button class="mbtn" id="btnReset" title="Reset view">&#8634;</button>
+        </div>
+
+        <div class="plaque">
+          <b>Advanced Nurturing High School</b>
+          <span>Campus model &mdash;
+            <a href="https://sketchfab.com/3d-models/school-complex-8eae9051f3f04ea7aba6ba418fe6e706" target="_blank" rel="noopener nofollow">School complex</a>
+            by <a href="https://sketchfab.com/threeDstuff" target="_blank" rel="noopener nofollow">3Dstuff</a>
+            on <a href="https://sketchfab.com" target="_blank" rel="noopener nofollow">Sketchfab</a></span>
         </div>
 
         <aside class="card" id="placeCard" aria-live="polite">
@@ -1505,6 +1578,7 @@ footer{
   var last = performance.now();
   function frame(now){
     var dt = Math.min(48, now - last); last = now;
+    if(mode === "3d"){ requestAnimationFrame(frame); return; }
     if(target){
       var k = 1 - Math.pow(0.0016, dt / 1000);
       cam.x += (target.x - cam.x) * k;
@@ -1693,6 +1767,51 @@ footer{
   }
   new MutationObserver(readTheme).observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] });
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readTheme);
+
+  /* ---------- plan / 3D ---------- */
+  var MODEL = "8eae9051f3f04ea7aba6ba418fe6e706";
+  var frameBox = document.querySelector(".campus-frame");
+  var threed = document.getElementById("threed");
+  var msg = document.getElementById("threedMsg");
+  var mode = "plan", shell = null, timer = 0;
+
+  function build3D(){
+    if(shell) return;
+    shell = document.createElement("iframe");
+    shell.title = "School complex — campus model";
+    shell.setAttribute("allowfullscreen", "");
+    shell.setAttribute("mozallowfullscreen", "true");
+    shell.setAttribute("webkitallowfullscreen", "true");
+    shell.setAttribute("allow", "autoplay; fullscreen; xr-spatial-tracking");
+    shell.setAttribute("xr-spatial-tracking", "");
+    shell.setAttribute("execution-while-out-of-viewport", "");
+    shell.setAttribute("execution-while-not-rendered", "");
+    shell.setAttribute("web-share", "");
+    shell.src = "https://sketchfab.com/models/" + MODEL +
+                "/embed?autostart=1&preload=1&ui_theme=dark&autospin=" + (reduced ? "0" : "0.12");
+    threed.appendChild(shell);
+    /* a blocked embed still fires load, so never trust it. The notice simply
+       sits underneath: if the model paints, nobody ever reads it. */
+    timer = setTimeout(function(){
+      msg.innerHTML = '<p>Nothing here? This preview blocks external embeds &mdash; ' +
+        'the model loads on the published site.<br><br>' +
+        'Press <b>Plan</b>, lower left, to go back to the drawn campus, or open ' +
+        'the model from the credit at lower right.</p>';
+    }, 4500);
+  }
+
+  var swPlan = document.getElementById("swPlan"), sw3d = document.getElementById("sw3d");
+  function setMode(m){
+    mode = m;
+    frameBox.classList.toggle("mode3d", m === "3d");
+    swPlan.classList.toggle("on", m === "plan");
+    sw3d.classList.toggle("on", m === "3d");
+    swPlan.setAttribute("aria-pressed", String(m === "plan"));
+    sw3d.setAttribute("aria-pressed", String(m === "3d"));
+    if(m === "3d") build3D(); else dirty = true;
+  }
+  swPlan.addEventListener("click", function(){ setMode("plan"); });
+  sw3d.addEventListener("click", function(){ setMode("3d"); });
 
   /* ---------- boot ---------- */
   readTheme(); setCompass(); resize(); fitView(true);
