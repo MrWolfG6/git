@@ -66,6 +66,8 @@ export class World {
     this.blend = 0;                       // 0 day → 1 night
     this.group = new THREE.Group();
     this.emissives = [];                  // things that light up after dark
+    this.lightSpots = [];                 // where light is cast from after dark
+    this.pool = [];                       // the few lights that actually do it
     this.curve = new THREE.CatmullRomCurve3(this.def.points, true, 'catmullrom', 0.5);
     this.length = this.curve.getLength();
     this.width = this.def.width;
@@ -113,6 +115,7 @@ export class World {
     this.buildLights(renderer);
     if (this.id === 'circuit') this.buildCircuitDressing();
     else this.buildCityDressing();
+    this.buildLightPool();
     this.apply(0);
     return this;
   }
@@ -515,10 +518,9 @@ export class World {
       this.group.add(sign);
       this.emissives.push({ mat, day: 0.18, night: 1 });
 
-      const glow = new THREE.PointLight(col, 0, 42, 2);
-      glow.position.copy(p);
-      this.group.add(glow);
-      this.emissives.push({ light: glow, day: 0, night: 26 });
+      /* the sign itself is what you read as neon; the light it throws is
+         handed to the pool, so sixty signs do not mean sixty lights */
+      this.lightSpots.push({ pos: p.clone(), color: col, intensity: 26, distance: 42 });
     }
   }
 
@@ -648,10 +650,61 @@ export class World {
       lamp.position.copy(pos).setY(23.6);
       this.group.add(lamp);
       this.emissives.push({ mat: lamp.material, day: 0, night: 1, colorDay: 0x1a1c20, colorNight: 0xdff0ff });
-      const pl = new THREE.PointLight(0xdff0ff, 0, 120, 2);
-      pl.position.copy(pos).setY(23);
-      this.group.add(pl);
-      this.emissives.push({ light: pl, day: 0, night: 60 });
+      this.lightSpots.push({ pos: pos.clone().setY(23), color: 0xdff0ff, intensity: 60, distance: 120 });
+    }
+  }
+
+  /* ── the light pool ──────────────────────────────────────
+     Every point light in the scene is compiled into every lit
+     material's shader and walked for every fragment — at intensity
+     zero as much as at full. Sixty neon signs meant sixty of those,
+     all day long, and Vegas ran at half the frame rate of the other
+     two worlds because of it. A handful of lights, re-pointed at
+     whatever is nearest, looks the same from the driver's seat and
+     costs a fixed amount. */
+  buildLightPool() {
+    const size = this.lightSpots.length === 0 ? 0 : (this.quality === 'low' ? 3 : 6);
+    for (let i = 0; i < size; i++) {
+      const l = new THREE.PointLight(0xffffff, 0, 60, 2);
+      l.visible = false;
+      this.group.add(l);
+      this.pool.push(l);
+    }
+  }
+
+  /* point the pool at the nearest sources to wherever the driver is */
+  updateLightPool(focus) {
+    if (!this.pool.length) return;
+    /* nothing is lit in daylight, so skip the work entirely */
+    if (this.blend < 0.02) {
+      for (const l of this.pool) l.visible = false;
+      return;
+    }
+    const spots = this.lightSpots;
+    const near = [];
+    for (let i = 0; i < spots.length; i++) {
+      const d = spots[i].pos.distanceToSquared(focus);
+      if (near.length < this.pool.length) {
+        near.push({ i, d });
+        if (near.length === this.pool.length) near.sort((a, b) => a.d - b.d);
+      } else if (d < near[near.length - 1].d) {
+        near[near.length - 1] = { i, d };
+        near.sort((a, b) => a.d - b.d);
+      }
+    }
+    for (let k = 0; k < this.pool.length; k++) {
+      const l = this.pool[k];
+      const pick = near[k];
+      if (!pick) { l.visible = false; continue; }
+      const spot = spots[pick.i];
+      l.visible = true;
+      l.position.copy(spot.pos);
+      l.color.setHex(spot.color);
+      l.distance = spot.distance;
+      /* fade the furthest one out rather than letting it snap as it swaps */
+      const reach = spot.distance * 1.35;
+      const fade = THREE.MathUtils.clamp(1 - (Math.sqrt(pick.d) - spot.distance) / Math.max(1, reach - spot.distance), 0, 1);
+      l.intensity = spot.intensity * this.blend * fade;
     }
   }
 

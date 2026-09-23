@@ -666,6 +666,7 @@ function loop() {
     throttle: input.throttle, heading: vehicle.heading, trackHeading: vehicle.trackHeading
   };
   world.followSun(vehicle.pos);
+  world.updateLightPool(vehicle.pos);
   updateHud(dt);
   render(dt);
 }
