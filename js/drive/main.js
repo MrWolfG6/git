@@ -177,6 +177,9 @@ function placeAll() {
   rig.snap = true;
   rig.update(0.016, input);
   world.followSun(vehicle.pos);
+  /* before the warm-up frames, so they compile against the lighting the
+     drive actually starts with rather than an empty pool */
+  world.updateLightPool(vehicle.pos);
 }
 
 /* ═══════════════════════════════════════════════════════════
