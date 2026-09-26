@@ -7,6 +7,7 @@
 
 import { Stage, pose } from './stage.js';
 import { scrollPoses, bindNav, bindReveals } from './choreo.js';
+import { initRail, decode } from './motion.js';
 import { CARS, BY_ID, PAINTS, paintsFor } from './cars.js';
 import { paintMarks } from './brand.js';
 import { $, $$, REDUCED, initSmoothScroll, markBooted, fmtMoney, scrollToEl } from './common.js';
@@ -93,7 +94,8 @@ function reveal() {
   const tl = gsap.timeline();
   tl.to(stage.lift, { y: 0, duration: 2.4, ease: 'expo.out' }, 0.2)
     .from('.hero__title .line > span', { yPercent: 110, duration: 1.4, stagger: 0.1, ease: 'expo.out' }, 0.5)
-    .from('.hero__top, .hero__foot, .nav', { opacity: 0, y: 16, duration: 1.1, stagger: 0.08, ease: 'power3.out' }, 0.9);
+    .from('.hero__top, .hero__foot, .nav', { opacity: 0, y: 16, duration: 1.1, stagger: 0.08, ease: 'power3.out' }, 0.9)
+    .add(() => { decode($('.hero__top .eyebrow'), 0.9); $$('#readout dd').forEach((d, i) => setTimeout(() => decode(d, 0.7), i * 90)); }, 1.0);
   ScrollTrigger.refresh();
 }
 
@@ -102,6 +104,7 @@ function choreograph() {
   scrollPoses(stage, SCENES, SPIN, active => { S.active = active; });
   bindNav(S.lenis, scrollToEl, $);
   bindReveals(REDUCED);
+  initRail($$('[data-scene]'), REDUCED);
 
   /* counters, in the mono, when they are read */
   for (const el of $$('[data-count]')) {
@@ -146,6 +149,8 @@ function readout() {
       next = 3 + Math.random() * 3;
       $('#roSurface').textContent = surfaces[i];
       $('#roCall').textContent = calls[i];
+      decode($('#roSurface'), 0.6);
+      decode($('#roCall'), 0.6);
       $('#roRead').textContent = `${S.car.id === 'eclipse' ? 300 : 200} m`;
     }
     $('#roNext').textContent = next.toFixed(1) + ' s';
@@ -191,7 +196,7 @@ function select(car, first = false) {
   const i = CARS.indexOf(car);
   $('#collIdx').textContent = `${String(i + 1).padStart(2, '0')} / ${String(CARS.length).padStart(2, '0')}`;
   $('#collType').textContent = `${car.type} · ${car.drivetrain}`;
-  $('#collName').textContent = car.name;
+  $('#collName .wi').textContent = car.name;
   $('#collThesis').textContent = car.thesis;
   $('#collSpecs').innerHTML = car.specs.slice(0, 3).map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   $('#collOpen').href = `car.html?car=${car.id}`;
@@ -199,7 +204,13 @@ function select(car, first = false) {
   $('#navDrive').href = `drive.html?car=${car.id}&world=${car.drive.world}`;
   $('#heroCar').textContent = car.name;
   $('#formCar').value = car.id;
-  if (changed && !REDUCED) gsap.fromTo('#collDetail > *', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.04, ease: 'power3.out' });
+  /* a new reading: the name rises out of its mask, the mono decodes */
+  if (changed && !REDUCED) {
+    gsap.fromTo('#collName .wi', { yPercent: 110 }, { yPercent: 0, duration: 1.1, ease: 'expo.out', delay: 0.35 });
+    decode($('#collType'), 0.7);
+    decode($('#collIdx'), 0.5);
+    gsap.fromTo('#collThesis, #collSpecs, .coll__actions', { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.8, stagger: 0.06, ease: 'power3.out', delay: 0.45 });
+  }
 
   /* the configurator follows the car on the dais */
   $('#cfgCar').textContent = car.name;
@@ -216,6 +227,7 @@ function choosePaint(p, quiet = false) {
   for (const b of $$('#cfgPaints .paint')) b.setAttribute('aria-checked', String(b.dataset.code === p.code));
   $('#cfgCode').textContent = p.code;
   $('#cfgName').textContent = p.name;
+  if (!quiet && !REDUCED) { decode($('#cfgCode'), 0.5); decode($('#cfgName'), 0.6); }
   $('#cfgPrice').textContent = fmtMoney(S.car.price + p.price);
   $('#cfgOpen').href = `car.html?car=${S.car.id}&paint=${p.code}#configure`;
   if (!quiet) stage.setPaint(p);

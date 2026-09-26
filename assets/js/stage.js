@@ -25,6 +25,7 @@ import { PAINTS } from './cars.js';
 import { TIER, REDUCED, damp } from './common.js';
 
 export const DAIS_TOP = 0.32;
+const RIM = new THREE.Color(0xE8D9A8);
 const DAIS_R = 3.5;
 
 /* a pose: camera in world space, aim in the car's own frame (so it
@@ -62,6 +63,7 @@ export class Stage {
     this.turn = 0;               // the turntable: its own axis, summed with the pose at render
     this.spinRate = 0;
     this.lift = { y: 0 };        // the rise/sink: its own axis too
+    this.pulse = 0;              // a beat of light when something changes; decays on its own
     this.pointer = { x: 0, y: 0 };
     this.target = pose([5.6, 1.6, 7.4], [0.2, 0.7, 0], -0.5, 1.0, 0.3, 0);
     this.now = { ...this.target };
@@ -331,6 +333,7 @@ export class Stage {
     const raise = () => {
       this.current = next;
       next.model.visible = true;
+      if (!instant) this.pulse = 1;
       if (instant || REDUCED) {
         this.lift.y = 0;
         this.busy = false;
@@ -381,6 +384,7 @@ export class Stage {
     const M = cur.materials.paint;
     const to = new THREE.Color(paint.hex);
     if (instant || REDUCED) return setPaint(cur.materials, paint);
+    this.pulse = 0.8;
     const from = M.color.clone();
     const o = { t: 0, m: M.metalness, r: M.roughness };
     window.gsap.to(o, {
@@ -435,8 +439,10 @@ export class Stage {
     this.camera.position.copy(cam);
     this.camera.lookAt(aim);
 
-    this.renderer.toneMappingExposure = n.exposure;
-    if (this.bloom) this.bloom.strength = n.bloom;
+    this.pulse = damp(this.pulse, 0, 2.4, dt);
+    this.renderer.toneMappingExposure = n.exposure + this.pulse * 0.22;
+    if (this.bloom) this.bloom.strength = n.bloom + this.pulse * 0.6;
+    this.rim.material.color.setRGB(1, 1, 1).multiplyScalar(1.05 + this.pulse * 1.2).multiply(RIM);
     document.documentElement.style.setProperty('--scrim', n.scrim.toFixed(3));
 
     if (this.idle) this.glow.material.opacity = 0.9 + Math.sin(this.t * 0.6) * 0.1;
