@@ -44,12 +44,11 @@ async function boot() {
   progress(28, 'Baking the room');
   await frame();
 
-  /* build every car now, so choosing one later never hitches */
-  for (let i = 0; i < CARS.length; i++) {
-    stage.getCar(CARS[i]);
-    progress(28 + (i + 1) / CARS.length * 52, `Drawing ${CARS[i].name}`);
-    await frame();
-  }
+  /* only the car on the dais is built while the sky is animating;
+     the other seven are built after the page opens (see buildRest) */
+  stage.getCar(S.car);
+  progress(70, `Drawing ${S.car.name}`);
+  await frame();
 
   buildDOM();
   progress(88, 'Compiling light');
@@ -63,9 +62,26 @@ async function boot() {
   choreograph();
   progress(100, 'Ready');
   markBooted();
-  stage.start();                               // live behind the eclipse
+  /* the stage does not render behind an opaque sky: that frame time
+     belongs to the eclipse */
   await window.OMENLoader?.finish();
+  stage.start();
   reveal();
+  buildRest();
+}
+
+/* the rest of the collection, one car per idle moment, so choosing one
+   later never hitches and the loader never had to wait for them */
+function buildRest() {
+  const queue = CARS.filter(c => c !== S.car);
+  const idle = window.requestIdleCallback || (fn => setTimeout(() => fn({ timeRemaining: () => 8 }), 120));
+  const next = () => {
+    const car = queue.shift();
+    if (!car) return;
+    stage.getCar(car);
+    idle(next, { timeout: 1500 });
+  };
+  setTimeout(() => idle(next, { timeout: 1500 }), 1800);   // after the fly-in
 }
 
 function reveal() {

@@ -34,7 +34,7 @@
   var rgba = function (c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; };
 
   /* state */
-  var target = 0, shown = 0, velocity = 0, lastTarget = 0, lastTargetT = 0;
+  var target = 0, shown = 0, moonRate = 0, velocity = 0, lastTarget = 0, lastTargetT = 0;
   var phase = 'contact';        // contact → totality → ring → mark → out
   var phaseT = 0, t = 0, speed = 1;
   var finishing = null, resolveFinish = null;
@@ -56,7 +56,9 @@
   for (var s = 0; s < 220; s++) stars.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.1 + 0.2, tw: Math.random() * 6.28 });
 
   function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    /* 1.5 is past what a soft glow can show, and a full-screen canvas at
+       2× is four times the fill for nothing */
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     W = innerWidth; H = innerHeight;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
@@ -64,10 +66,50 @@
     cx = W / 2; cy = H * 0.46;
     root.style.setProperty('--r', R + 'px');
     root.style.setProperty('--cy', cy + 'px');
+    buildCorona();
+  }
+
+  /* The corona is drawn once, into its own canvas, and then only placed,
+     faded and turned each frame. Rebuilding 170 gradients a frame is what
+     made the sky stutter on a high-density screen. */
+  var sprite = document.createElement('canvas'), SR = 0;
+  function buildCorona() {
+    SR = R * 3.2;
+    var px = Math.ceil(SR * 2 * dpr);
+    sprite.width = sprite.height = px;
+    var c = sprite.getContext('2d');
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.globalCompositeOperation = 'lighter';
+    var o = SR;
+    var halo = c.createRadialGradient(o, o, R * 0.98, o, o, SR);
+    halo.addColorStop(0, rgba(BONE, 0.55));
+    halo.addColorStop(0.08, rgba(CORONA, 0.35));
+    halo.addColorStop(0.35, rgba(CORONA, 0.08));
+    halo.addColorStop(1, rgba(CORONA, 0));
+    c.fillStyle = halo;
+    c.beginPath(); c.arc(o, o, SR, 0, 6.2832); c.fill();
+    for (var k = 0; k < streamers.length; k++) {
+      var sm = streamers[k], a0 = sm.a, len = Math.min(R * sm.len, SR - R - 2);
+      var x0 = o + Math.cos(a0) * R * 0.99, y0 = o + Math.sin(a0) * R * 0.99;
+      var x1 = o + Math.cos(a0) * (R + len), y1 = o + Math.sin(a0) * (R + len);
+      var gr = c.createLinearGradient(x0, y0, x1, y1);
+      gr.addColorStop(0, rgba(CORONA, sm.alpha * 2.2));
+      gr.addColorStop(1, rgba(CORONA, 0));
+      c.fillStyle = gr;
+      var wv = sm.w * R, nx = -Math.sin(a0), ny = Math.cos(a0);
+      var mx = o + Math.cos(a0) * (R + len * 0.45), my = o + Math.sin(a0) * (R + len * 0.45);
+      c.beginPath();
+      c.moveTo(x0 + nx * wv, y0 + ny * wv);
+      c.quadraticCurveTo(mx + nx * wv * 0.5, my + ny * wv * 0.5, x1, y1);
+      c.quadraticCurveTo(mx - nx * wv * 0.5, my - ny * wv * 0.5, x0 - nx * wv, y0 - ny * wv);
+      c.closePath();
+      c.fill();
+    }
   }
 
   var ease = function (x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
   var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+  var smooth = function (x) { return x * x * (3 - 2 * x); };
 
   /* moon position and radius, in units of R, screen space (y down) */
   function moon() {
@@ -76,7 +118,7 @@
       return { x: -2.35 * (1 - k), y: -2.35 * (1 - k), r: 1.03 };
     }
     if (phase === 'totality') return { x: 0, y: 0, r: 1.03 };
-    var m = phase === 'ring' ? ease(clamp(phaseT / 1.5, 0, 1)) : 1;
+    var m = phase === 'ring' ? ease(clamp(phaseT / 1.2, 0, 1)) : 1;
     /* to the bite: (−0.30, +0.30) in the mark's y-up space */
     return { x: -0.3 * m, y: -0.3 * m, r: 1.03 - 0.21 * m };
   }
@@ -90,7 +132,7 @@
   function draw() {
     var m = moon();
     var cov = coverage(m);
-    var total = phase === 'totality' ? 1 : phase === 'ring' ? clamp(1 - phaseT / 1.1, 0, 1) : phase === 'contact' ? Math.pow(cov, 6) : 0;
+    var total = phase === 'totality' ? 1 : phase === 'ring' ? 1 - smooth(clamp(phaseT / 0.9, 0, 1)) : phase === 'contact' ? Math.pow(cov, 6) : 0;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
@@ -119,32 +161,14 @@
     /* the corona: a halo and streamers, only really visible near totality */
     var cor = total;
     if (cor > 0.01) {
-      var halo = ctx.createRadialGradient(cx, cy, R * 0.98, cx, cy, R * 3.2);
-      halo.addColorStop(0, rgba(BONE, 0.55 * cor));
-      halo.addColorStop(0.08, rgba(CORONA, 0.35 * cor));
-      halo.addColorStop(0.35, rgba(CORONA, 0.08 * cor));
-      halo.addColorStop(1, rgba(CORONA, 0));
-      ctx.fillStyle = halo;
-      ctx.beginPath(); ctx.arc(cx, cy, R * 3.2, 0, 6.2832); ctx.fill();
-      for (var k = 0; k < streamers.length; k++) {
-        var sm = streamers[k];
-        var len = R * sm.len * (0.9 + 0.12 * Math.sin(t * 0.7 + sm.ph)) * (0.6 + 0.4 * cor);
-        var a0 = sm.a + Math.sin(t * 0.05 + sm.ph) * 0.02;
-        var x0 = cx + Math.cos(a0) * R * 0.99, y0 = cy + Math.sin(a0) * R * 0.99;
-        var x1 = cx + Math.cos(a0) * (R + len), y1 = cy + Math.sin(a0) * (R + len);
-        var gr = ctx.createLinearGradient(x0, y0, x1, y1);
-        gr.addColorStop(0, rgba(CORONA, sm.alpha * 2.2 * cor));
-        gr.addColorStop(1, rgba(CORONA, 0));
-        ctx.fillStyle = gr;
-        var wv = sm.w * R;
-        var nx = -Math.sin(a0), ny = Math.cos(a0);
-        ctx.beginPath();
-        ctx.moveTo(x0 + nx * wv, y0 + ny * wv);
-        ctx.quadraticCurveTo(cx + Math.cos(a0) * (R + len * 0.45) + nx * wv * 0.5, cy + Math.sin(a0) * (R + len * 0.45) + ny * wv * 0.5, x1, y1);
-        ctx.quadraticCurveTo(cx + Math.cos(a0) * (R + len * 0.45) - nx * wv * 0.5, cy + Math.sin(a0) * (R + len * 0.45) - ny * wv * 0.5, x0 - nx * wv, y0 - ny * wv);
-        ctx.closePath();
-        ctx.fill();
-      }
+      /* placed, faded, breathing and turning very slowly */
+      var sc = (0.9 + 0.1 * cor) * (1 + 0.012 * Math.sin(t * 0.8));
+      ctx.save();
+      ctx.globalAlpha = cor;
+      ctx.translate(cx, cy);
+      ctx.rotate(t * 0.012);
+      ctx.drawImage(sprite, -SR * sc, -SR * sc, SR * 2 * sc, SR * 2 * sc);
+      ctx.restore();
     }
     /* a glow round the visible sun while it is partial */
     var lit = 1 - total;
@@ -177,7 +201,7 @@
     ctx.restore();
     /* the earthshine rim: gone once the moon settles, so the last frame
        is the mark and nothing else */
-    var rim = phase === 'mark' ? 0 : phase === 'ring' ? clamp(1 - phaseT / 0.8, 0, 1) : 1;
+    var rim = phase === 'mark' ? 0 : phase === 'ring' ? clamp(1 - phaseT / 0.6, 0, 1) : 1;
     if (rim > 0 && (phase !== 'contact' || cov > 0.2)) {
       ctx.beginPath();
       ctx.arc(cx + m.x * R, cy + m.y * R, m.r * R, 0, 6.2832);
@@ -188,7 +212,7 @@
 
     /* the diamond ring: light breaking through at the lower right */
     if (phase === 'ring' || phase === 'mark') {
-      var f = phase === 'ring' ? Math.exp(-Math.pow((phaseT - 0.22) / 0.2, 2)) : 0;
+      var f = phase === 'ring' ? Math.exp(-Math.pow((phaseT - 0.18) / 0.17, 2)) : 0;
       if (f > 0.01) {
         var dx = cx + R * 0.7071, dy = cy + R * 0.7071;
         ctx.globalCompositeOperation = 'lighter';
@@ -214,8 +238,8 @@
     }
 
     /* the hairline rule: drawn out from the centre, overshooting by R/3 */
-    if (phase === 'mark' || (phase === 'ring' && phaseT > 1.0)) {
-      var rt = phase === 'mark' ? clamp((phaseT + 0.5) / 0.7, 0, 1) : clamp((phaseT - 1.0) / 0.7, 0, 1);
+    if (phase === 'mark' || (phase === 'ring' && phaseT > 0.75)) {
+      var rt = phase === 'mark' ? clamp((phaseT + 0.55) / 0.6, 0, 1) : clamp((phaseT - 0.75) / 0.6, 0, 1);
       var half = 1.33 * R * ease(rt);
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = rgba(CORONA, 1);
@@ -235,22 +259,28 @@
 
   var last = performance.now();
   function frame(now) {
-    var dt = Math.min(0.05, (now - last) / 1000) * speed;
+    /* a stalled frame (the page is busy loading) resumes where it left
+       off instead of jumping to catch up */
+    var dt = Math.min(1 / 30, (now - last) / 1000) * speed;
     last = now;
     t += dt;
-    /* the moon never outruns 0.55 of a transit a second, so even an
-       instant load still reads as an eclipse, not a cut */
-    var maxRate = seen ? 1.2 : 0.55;
-    shown += clamp(target - shown, 0, maxRate * dt);
+    /* The moon glides: its speed eases toward what the remaining distance
+       asks for, capped, so it accelerates away from a stop and settles
+       into totality instead of lurching as each chunk of loading lands. */
+    var maxRate = seen ? 1.6 : 0.8;
+    var wantRate = Math.min(maxRate, (target - shown) * 3.2);
+    moonRate += (wantRate - moonRate) * (1 - Math.exp(-dt * 5));
+    shown = Math.min(target, shown + Math.max(0, moonRate) * dt);
+    if (target >= 1 && 1 - shown < 0.004) shown = 1;
     velocity += ((target - lastTarget) / Math.max(0.05, (now - lastTargetT) / 1000) - velocity) * 0.02;
     if (elBar) elBar.style.transform = 'scaleX(' + shown.toFixed(4) + ')';
     setText(elPct, String(Math.round(shown * 100)).padStart(3, '0'));
     forecast();
 
     if (phase === 'contact' && finishing && shown >= 0.999) { phase = 'totality'; phaseT = 0; setText(elCast, 'Totality'); root.classList.add('is-total'); }
-    else if (phase === 'totality' && (phaseT += dt) > (seen ? 0.35 : 1.1)) { phase = 'ring'; phaseT = 0; setText(elCast, 'Third contact'); root.classList.remove('is-total'); }
-    else if (phase === 'ring' && (phaseT += dt) > 1.7) { phase = 'mark'; phaseT = 0; setText(elCast, 'It tells you first.'); root.classList.add('is-mark'); }
-    else if (phase === 'mark' && (phaseT += dt) > (seen ? 0.35 : 0.9) && resolveFinish) { var r = resolveFinish; resolveFinish = null; r(); }
+    else if (phase === 'totality' && (phaseT += dt) > (seen ? 0.3 : 0.7)) { phase = 'ring'; phaseT = 0; setText(elCast, 'Third contact'); root.classList.remove('is-total'); }
+    else if (phase === 'ring' && (phaseT += dt) > 1.3) { phase = 'mark'; phaseT = 0; setText(elCast, 'It tells you first.'); root.classList.add('is-mark'); }
+    else if (phase === 'mark' && (phaseT += dt) > (seen ? 0.3 : 0.6) && resolveFinish) { var r = resolveFinish; resolveFinish = null; r(); }
 
     draw();
     if (phase !== 'out') requestAnimationFrame(frame);
