@@ -314,7 +314,7 @@
      the stars out */
   var meteorCanvas = root.querySelector('.loader__meteors');
   var meteors = meteorCanvas && window.OMENMeteors
-    ? window.OMENMeteors(meteorCanvas, { every: seen ? [9, 9] : [1.2, 2.2], band: 0.55, pair: 0.3,
+    ? window.OMENMeteors(meteorCanvas, { every: seen ? [9, 9] : [0.8, 1.6], band: 0.55, pair: 0.3,
         avoid: function () { return { x: cx, y: cy, r: R * 1.04 }; } }).start(seen ? 60 : 0.7)
     : null;
   resize();
