@@ -40,11 +40,7 @@ const SPIN = { configure: 0.12 };
 
 let stage, lenis;
 const frame = () => new Promise(r => requestAnimationFrame(() => r()));
-function progress(p, label) {
-  $('#loadPct').textContent = String(Math.round(p)).padStart(3, '0');
-  gsap.to('#loadBar', { scaleX: p / 100, duration: 0.4 });
-  if (label) $('#loadStatus').textContent = label;
-}
+const progress = (p, label) => window.OMENLoader?.progress(p / 100, label);
 
 async function boot() {
   document.title = `${car.name} — OMEN`;
@@ -61,7 +57,6 @@ async function boot() {
   stage.setWheels(build.wheel.id);
   stage.lift.y = -2.2;
   stage.target = { ...SCENES.hero };
-  stage.now = { ...SCENES.hero, cx: 8, cy: 3, cz: 14, exposure: 0 };
   fill();
   progress(85, 'Compiling light');
   stage.warm();
@@ -78,11 +73,13 @@ async function boot() {
 
   progress(100, 'Ready');
   markBooted();
-  stage.start();
+  stage.start();                               // live behind the eclipse
+  await window.OMENLoader?.finish();
   document.documentElement.classList.remove('is-loading');
-  gsap.to('#loader', { opacity: 0, duration: REDUCED ? 0.01 : 0.8, onComplete: () => { $('#loader').hidden = true; } });
+  window.OMENLoader?.hide();
   if (REDUCED) stage.lift.y = 0;
   else {
+    stage.now = { ...SCENES.hero, cx: 8, cy: 3, cz: 14, exposure: 0 };
     gsap.to(stage.lift, { y: 0, duration: 2.2, ease: 'expo.out', delay: 0.2 });
     gsap.from('.chero__name', { yPercent: 40, opacity: 0, duration: 1.4, ease: 'expo.out', delay: 0.4 });
   }
