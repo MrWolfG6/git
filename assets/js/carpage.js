@@ -73,8 +73,8 @@ async function boot() {
 
   progress(100, 'Ready');
   markBooted();
-  stage.start();                               // live behind the eclipse
-  await window.OMENLoader?.finish();
+  await window.OMENLoader?.finish();           // the sky gets the frame time
+  stage.start();
   document.documentElement.classList.remove('is-loading');
   window.OMENLoader?.hide();
   if (REDUCED) stage.lift.y = 0;
