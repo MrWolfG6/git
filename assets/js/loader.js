@@ -279,7 +279,7 @@
     setText(elPct, String(Math.round(shown * 100)).padStart(3, '0'));
     forecast();
 
-    if (phase === 'contact' && finishing && shown >= 0.999) { phase = 'totality'; phaseT = 0; setText(elCast, 'Totality'); root.classList.add('is-total'); }
+    if (phase === 'contact' && finishing && shown >= 0.999) { phase = 'totality'; phaseT = 0; setText(elCast, 'Totality'); root.classList.add('is-total'); if (meteors) setTimeout(meteors.spawn, 250); }
     else if (phase === 'totality' && (phaseT += dt) > (seen ? 0.3 : 1.2)) { phase = 'ring'; phaseT = 0; setText(elCast, 'Third contact'); root.classList.remove('is-total'); }
     else if (phase === 'ring' && (phaseT += dt) > (seen ? 1.2 : 1.5)) { phase = 'mark'; phaseT = 0; setText(elCast, 'It tells you first.'); root.classList.add('is-mark'); }
     else if (phase === 'mark' && (phaseT += dt) > (seen ? 0.3 : 0.8) && resolveFinish) { var r = resolveFinish; resolveFinish = null; r(); }
@@ -302,6 +302,7 @@
     },
     hide: function () {
       root.classList.add('is-out');
+      if (meteors) meteors.stop();
       setTimeout(function () { phase = 'out'; root.hidden = true; }, reduced ? 0 : 1100);
     }
   };
@@ -309,6 +310,13 @@
 
   if (!ctx) return;
   root.classList.add('is-live');
+  /* shooting stars over the sky: one early, more once totality has put
+     the stars out */
+  var meteorCanvas = root.querySelector('.loader__meteors');
+  var meteors = meteorCanvas && window.OMENMeteors
+    ? window.OMENMeteors(meteorCanvas, { every: seen ? [9, 9] : [1.2, 2.2], band: 0.55, pair: 0.3,
+        avoid: function () { return { x: cx, y: cy, r: R * 1.04 }; } }).start(seen ? 60 : 0.7)
+    : null;
   resize();
   addEventListener('resize', function () { resize(); if (reduced) draw(); }, { passive: true });
   /* anyone in a hurry: a click or a key runs the sky at four times */

@@ -88,6 +88,8 @@ function buildRest() {
 function reveal() {
   document.documentElement.classList.remove('is-loading');
   window.OMENLoader?.hide();
+  /* the upper sky of the showroom: rare shooting stars, the moon's path */
+  window.OMENMeteors?.($('#meteors'), { every: [4, 9], band: 0.4, pair: 0.25 }).start(2.5);
   if (REDUCED) { stage.lift.y = 0; return; }
   /* the fly-in starts as the sky lifts, not behind it */
   stage.now = { ...SCENES.hero, cx: 9, cy: 3.4, cz: 15, exposure: 0, bloom: 1.2 };
