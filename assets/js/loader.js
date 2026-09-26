@@ -118,7 +118,7 @@
       return { x: -2.35 * (1 - k), y: -2.35 * (1 - k), r: 1.03 };
     }
     if (phase === 'totality') return { x: 0, y: 0, r: 1.03 };
-    var m = phase === 'ring' ? ease(clamp(phaseT / 1.2, 0, 1)) : 1;
+    var m = phase === 'ring' ? ease(clamp(phaseT / 1.35, 0, 1)) : 1;
     /* to the bite: (−0.30, +0.30) in the mark's y-up space */
     return { x: -0.3 * m, y: -0.3 * m, r: 1.03 - 0.21 * m };
   }
@@ -132,7 +132,7 @@
   function draw() {
     var m = moon();
     var cov = coverage(m);
-    var total = phase === 'totality' ? 1 : phase === 'ring' ? 1 - smooth(clamp(phaseT / 0.9, 0, 1)) : phase === 'contact' ? Math.pow(cov, 6) : 0;
+    var total = phase === 'totality' ? 1 : phase === 'ring' ? 1 - smooth(clamp(phaseT / 1.0, 0, 1)) : phase === 'contact' ? Math.pow(cov, 6) : 0;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.globalCompositeOperation = 'source-over';
@@ -212,7 +212,7 @@
 
     /* the diamond ring: light breaking through at the lower right */
     if (phase === 'ring' || phase === 'mark') {
-      var f = phase === 'ring' ? Math.exp(-Math.pow((phaseT - 0.18) / 0.17, 2)) : 0;
+      var f = phase === 'ring' ? Math.exp(-Math.pow((phaseT - 0.26) / 0.21, 2)) : 0;
       if (f > 0.01) {
         var dx = cx + R * 0.7071, dy = cy + R * 0.7071;
         ctx.globalCompositeOperation = 'lighter';
@@ -238,8 +238,8 @@
     }
 
     /* the hairline rule: drawn out from the centre, overshooting by R/3 */
-    if (phase === 'mark' || (phase === 'ring' && phaseT > 0.75)) {
-      var rt = phase === 'mark' ? clamp((phaseT + 0.55) / 0.6, 0, 1) : clamp((phaseT - 0.75) / 0.6, 0, 1);
+    if (phase === 'mark' || (phase === 'ring' && phaseT > 0.9)) {
+      var rt = phase === 'mark' ? clamp((phaseT + 0.6) / 0.6, 0, 1) : clamp((phaseT - 0.9) / 0.6, 0, 1);
       var half = 1.33 * R * ease(rt);
       ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = rgba(CORONA, 1);
@@ -267,20 +267,22 @@
     /* The moon glides: its speed eases toward what the remaining distance
        asks for, capped, so it accelerates away from a stop and settles
        into totality instead of lurching as each chunk of loading lands. */
-    var maxRate = seen ? 1.6 : 0.8;
-    var wantRate = Math.min(maxRate, (target - shown) * 3.2);
+    /* quick across open sky, then a crawl for the last sliver: the
+       wait before totality is the part the audience should feel */
+    var maxRate = seen ? 1.6 : 0.85;
+    var wantRate = Math.min(maxRate, (target - shown) * (seen ? 3.2 : 2.1));
     moonRate += (wantRate - moonRate) * (1 - Math.exp(-dt * 5));
     shown = Math.min(target, shown + Math.max(0, moonRate) * dt);
-    if (target >= 1 && 1 - shown < 0.004) shown = 1;
+    if (target >= 1 && 1 - shown < 0.003) shown = 1;
     velocity += ((target - lastTarget) / Math.max(0.05, (now - lastTargetT) / 1000) - velocity) * 0.02;
     if (elBar) elBar.style.transform = 'scaleX(' + shown.toFixed(4) + ')';
     setText(elPct, String(Math.round(shown * 100)).padStart(3, '0'));
     forecast();
 
     if (phase === 'contact' && finishing && shown >= 0.999) { phase = 'totality'; phaseT = 0; setText(elCast, 'Totality'); root.classList.add('is-total'); }
-    else if (phase === 'totality' && (phaseT += dt) > (seen ? 0.3 : 0.7)) { phase = 'ring'; phaseT = 0; setText(elCast, 'Third contact'); root.classList.remove('is-total'); }
-    else if (phase === 'ring' && (phaseT += dt) > 1.3) { phase = 'mark'; phaseT = 0; setText(elCast, 'It tells you first.'); root.classList.add('is-mark'); }
-    else if (phase === 'mark' && (phaseT += dt) > (seen ? 0.3 : 0.6) && resolveFinish) { var r = resolveFinish; resolveFinish = null; r(); }
+    else if (phase === 'totality' && (phaseT += dt) > (seen ? 0.3 : 1.2)) { phase = 'ring'; phaseT = 0; setText(elCast, 'Third contact'); root.classList.remove('is-total'); }
+    else if (phase === 'ring' && (phaseT += dt) > (seen ? 1.2 : 1.5)) { phase = 'mark'; phaseT = 0; setText(elCast, 'It tells you first.'); root.classList.add('is-mark'); }
+    else if (phase === 'mark' && (phaseT += dt) > (seen ? 0.3 : 0.8) && resolveFinish) { var r = resolveFinish; resolveFinish = null; r(); }
 
     draw();
     if (phase !== 'out') requestAnimationFrame(frame);
