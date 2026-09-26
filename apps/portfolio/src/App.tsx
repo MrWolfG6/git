@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Campus } from "./three/Campus";
 import { CameraRig, Dust } from "./three/CameraRig";
-import { Preloader } from "./components/Preloader";
+import { Intro } from "./components/Intro";
 import { Hook } from "./components/Hook";
 import { Hud } from "./components/Hud";
 import { Flat } from "./components/Flat";
@@ -75,7 +75,7 @@ export default function App() {
       {phase === "hook" && <Hook />}
       {phase === "campus" && <Hud />}
 
-      <Preloader
+      <Intro
         done={loaded}
         onGone={() => setPhase(shouldSkipHook() || reduced ? "campus" : "hook")}
       />

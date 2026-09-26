@@ -13,7 +13,7 @@ const TOTAL_CELLS = identity.nameRows.join("").length;
 export function Hook() {
   const enter = useStore((s) => s.enter);
   const reduced = useStore((s) => s.reduced);
-  const [cells, setCells] = useState(reduced ? TOTAL_CELLS : 0);
+  const [cells] = useState(TOTAL_CELLS);
   const [lit, setLit] = useState(reduced);
   const [thesis, setThesis] = useState(reduced);
   const [cta, setCta] = useState(reduced);
@@ -21,9 +21,6 @@ export function Hook() {
   useEffect(() => {
     if (reduced) return;
     const timers: number[] = [];
-    for (let i = 1; i <= TOTAL_CELLS; i++) {
-      timers.push(window.setTimeout(() => setCells(i), 120 + i * 62));
-    }
     timers.push(window.setTimeout(() => setLit(true), 3400));
     timers.push(window.setTimeout(() => setThesis(true), 4600));
     timers.push(window.setTimeout(() => setCta(true), 6200));
