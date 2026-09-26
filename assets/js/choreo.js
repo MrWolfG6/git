@@ -12,6 +12,7 @@
 
 import { POSE_KEYS } from './stage.js';
 import { $$ } from './common.js';
+import { initMotion } from './motion.js';
 
 export function scrollPoses(stage, SCENES, SPIN = {}, onActive) {
   const { ScrollTrigger } = window;
@@ -69,12 +70,7 @@ export function bindNav(lenis, scrollToEl, $) {
   });
 }
 
+/* copy arrives as readings: see motion.js */
 export function bindReveals(REDUCED) {
-  const { gsap, ScrollTrigger } = window;
-  if (REDUCED) return;
-  gsap.set('.reveal', { opacity: 0 });
-  ScrollTrigger.batch('.reveal', {
-    start: 'top 88%',
-    onEnter: els => gsap.fromTo(els, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 1.1, stagger: 0.08, ease: 'power3.out', overwrite: true })
-  });
+  initMotion(REDUCED);
 }
