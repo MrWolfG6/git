@@ -3,188 +3,192 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-<title>Test drive — Meridian Autohaus</title>
-<meta name="description" content="Drive the car yourself: Chicago, Las Vegas or a Grand Prix circuit, day or night, from three seats." />
-<meta name="theme-color" content="#000000" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css" />
-<link rel="stylesheet" href="css/drive.css" />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='none' stroke='white' stroke-width='6'/><path d='M50 50 L50 6 M50 50 L12 72 M50 50 L88 72' stroke='white' stroke-width='6' fill='none'/></svg>" />
+<title>Simulator — OMEN</title>
+<meta name="description" content="Drive an OMEN: THE SPINE, SALT or THE CIRCUIT, by day or night, from three seats." />
+<meta name="theme-color" content="#0B0B11" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230B0B11'/><g fill='%23E8D9A8'><path d='M55.359 13.073A37.313 37.313 0 1 1 13.073 55.359A30.597 30.597 0 1 0 55.359 13.073Z'/><path d='M48.5 0.373H51.5V99.627H48.5Z'/></g></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..600&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/omen.css" />
+<link rel="stylesheet" href="assets/css/drive.css" />
+<script>
+/* Watchdog: never strand anyone on the loading screen. */
+(function () {
+  var done = false;
+  function handOver() {
+    if (done || window.__OMEN_BOOTED) return;
+    done = true;
+    document.documentElement.classList.add('is-fallback');
+  }
+  setTimeout(handOver, 12000);
+  addEventListener('error', function (e) {
+    var t = e.target;
+    if (t && t.tagName === 'SCRIPT') handOver();
+  }, true);
+  window.__omenHandOver = handOver;
+})();
+</script>
 </head>
 <body class="drive">
 
-<canvas id="driveCanvas"></canvas>
-<div class="drive-vignette" aria-hidden="true"></div>
-<div class="drive-grain" aria-hidden="true"></div>
+<canvas id="view"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
 
-<!-- ═══════════ BUILDING THE WORLD ═══════════ -->
-<div class="dload" id="dLoad">
-  <div class="dload__inner">
-    <svg class="dload__star" viewBox="0 0 200 200" aria-hidden="true">
-      <circle class="ls-ring" cx="100" cy="100" r="88" />
-      <path class="ls-spoke" d="M100 100 L100 16" />
-      <path class="ls-spoke" d="M100 100 L27 142" />
-      <path class="ls-spoke" d="M100 100 L173 142" />
-    </svg>
-    <p class="dload__car" id="loadCar">—</p>
-    <p class="dload__where" id="loadWhere">—</p>
+<!-- ═══════════ LOADING ═══════════ -->
+<div class="dload" id="dLoad" role="status" aria-live="polite">
+  <div class="dload__mark"><svg class="mark" viewBox="0 0 100 100" role="img" aria-label="OMEN"><path d="M55.359 13.073A37.313 37.313 0 1 1 13.073 55.359A30.597 30.597 0 1 0 55.359 13.073Z"/><path d="M49.254 0.373H50.746V99.627H49.254Z"/></svg></div>
+  <p class="dload__car" id="loadCar">OMEN</p>
+  <p class="dload__where mono" id="loadWhere">—</p>
+  <p class="dload__status mono" id="loadStatus">Surveying the route</p>
+  <div class="dload__bar"><i id="loadBar"></i></div>
+  <div class="dload__fail">
+    <p>The simulator could not start in this browser. It needs WebGL and ES modules.</p>
+    <a class="btn btn--line" href="index.html#collection"><span>Back to the collection</span></a>
   </div>
-  <div class="dload__meta">
-    <span id="loadStatus">Surveying the route</span>
-    <span class="dload__pct"><em id="loadPct">0</em>%</span>
-  </div>
-  <div class="dload__bar"><span id="loadBar"></span></div>
 </div>
 
 <!-- ═══════════ BEFORE YOU SET OFF ═══════════ -->
 <div class="dintro" id="dIntro" hidden>
-  <div class="dintro__panel">
-    <p class="dintro__eyebrow" id="introWhere">—</p>
+  <div class="panel dintro__panel">
+    <p class="eyebrow"><span>SIM</span> <b id="introWhere">—</b></p>
     <h1 class="dintro__name" id="introCar">—</h1>
     <p class="dintro__line" id="introLine">—</p>
 
     <div class="dintro__cols">
       <div>
-        <p class="dintro__label">Drive</p>
-        <ul class="keylist">
-          <li><b>W</b> <b>↑</b><span>Throttle</span></li>
-          <li><b>S</b> <b>↓</b><span>Brake · reverse</span></li>
-          <li><b>A</b> <b>D</b><span>Steer</span></li>
-          <li><b>Space</b><span>Handbrake</span></li>
+        <p class="lbl mono">Drive</p>
+        <ul class="keys">
+          <li><kbd>W</kbd><kbd>↑</kbd><span>Throttle</span></li>
+          <li><kbd>S</kbd><kbd>↓</kbd><span>Brake · reverse</span></li>
+          <li><kbd>A</kbd><kbd>D</kbd><span>Steer</span></li>
+          <li><kbd>Space</kbd><span>Handbrake</span></li>
         </ul>
       </div>
       <div>
-        <p class="dintro__label">View</p>
-        <ul class="keylist">
-          <li><b>C</b><span>Chase · driver · passenger</span></li>
-          <li><b>N</b><span>Day or night</span></li>
-          <li><b>M</b><span>Sound</span></li>
-          <li><b>R</b><span>Back to the road</span></li>
+        <p class="lbl mono">Around</p>
+        <ul class="keys">
+          <li><kbd>C</kbd><span>Seat</span></li>
+          <li><kbd>N</kbd><span>Day · night</span></li>
+          <li><kbd>M</kbd><span>Sound</span></li>
+          <li><kbd>R</kbd><span>Back on the road</span></li>
+          <li><kbd>P</kbd><kbd>Esc</kbd><span>Pause</span></li>
         </ul>
       </div>
     </div>
 
-    <div class="dintro__opts dintro__opts--three">
-      <div class="opt-group">
-        <p class="opt-label">Where</p>
-        <div class="opts" id="introWorlds"></div>
-      </div>
-      <div class="opt-group" hidden>
-        <p class="opt-label">Race length</p>
-        <div class="opts" id="introLaps"></div>
-      </div>
-      <div class="opt-group">
-        <p class="opt-label">Time of day</p>
-        <div class="opts" id="introTime">
-          <button class="opt is-active" data-time="day">Day</button>
-          <button class="opt" data-time="night">Night</button>
-        </div>
-      </div>
+    <div class="dintro__opts">
+      <div class="group group--wide"><p class="lbl mono">Route</p><div class="choices" id="introWorlds"></div></div>
+      <div class="group"><p class="lbl mono">Time</p><div class="choices" id="introTime">
+        <button class="choice" data-time="day">Day</button><button class="choice" data-time="night">Night</button>
+      </div></div>
+      <div class="group"><p class="lbl mono">Seat</p><div class="choices" id="introSeat">
+        <button class="choice" data-seat="chase">Third</button><button class="choice" data-seat="driver">First</button><button class="choice" data-seat="passenger">Passenger</button>
+      </div></div>
+      <div class="group group--wide" id="lapGroup" hidden><p class="lbl mono">Race length</p><div class="choices" id="introLaps"></div></div>
     </div>
 
-    <button class="btn btn--fill btn--lg dintro__go" id="introGo"><span>Start the engine</span></button>
-    <p class="dintro__note">Engine audio is synthesised in the browser from this car's own profile. Headphones recommended.</p>
-    <a class="dintro__back" id="introBack" href="index.html#collection">Leave the car</a>
+    <button class="btn btn--fill dintro__go" id="introGo"><span>Start</span></button>
+    <p class="dintro__note mono">Sound is synthesised in the browser from this car's own profile. No recordings.</p>
+    <a class="dintro__back mono" id="introBack" href="index.html#collection">Leave the car</a>
   </div>
 </div>
 
 <!-- ═══════════ HUD ═══════════ -->
 <div class="hud" id="hud" hidden>
   <div class="hud__tl">
-    <a class="hud__exit" id="hudExit" href="index.html#collection" aria-label="Exit">
-      <svg viewBox="0 0 24 24"><path d="M15 4 L7 12 L15 20" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+    <a class="hud__exit" id="hudExit" href="index.html#collection" aria-label="Leave the simulator">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 L7 12 L15 20" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
     </a>
-    <div class="hud__ident">
-      <em id="hudCar">—</em>
-      <span id="hudWhere">—</span>
-    </div>
+    <div class="hud__ident"><b id="hudCar">—</b><span class="mono" id="hudWhere">—</span></div>
   </div>
 
-  <div class="hud__map" id="hudMap">
-    <svg viewBox="0 0 100 100" aria-hidden="true">
-      <path id="mapTrack" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
-      <path id="mapLine" fill="none" stroke="rgba(255,255,255,.62)" stroke-width="1" stroke-dasharray="2.5 3.5"/>
+  <div class="hud__map" aria-hidden="true">
+    <svg viewBox="0 0 100 100">
+      <path id="mapTrack" fill="none" stroke="rgba(242,239,233,.16)" stroke-width="4.5" stroke-linejoin="round"/>
+      <path id="mapLine" fill="none" stroke="rgba(242,239,233,.6)" stroke-width=".8"/>
       <g id="mapAI"></g>
-      <circle id="mapMe" r="3.1" fill="#fff"/>
-      <circle id="mapStart" r="1.6" fill="none" stroke="#ff3b30" stroke-width="1.2"/>
+      <rect id="mapStart" width="1.2" height="5" fill="#F2EFE9"/>
+      <circle id="mapMe" r="2.6" fill="#F2EFE9"/>
     </svg>
   </div>
 
+  <!-- the forward read: what is coming, before it comes -->
+  <div class="read" id="read">
+    <span class="mono read__k">Read</span>
+    <span class="read__dir" id="readDir">—</span>
+    <span class="mono read__v" id="readDist">— m</span>
+    <span class="mono read__v" id="readSpeed">— km/h</span>
+    <i class="read__bar"><b id="readBar"></b></i>
+  </div>
+  <p class="warn mono" id="warn" hidden>—</p>
+
   <div class="hud__tr">
-    <button class="hud__btn" id="btnView"><i>C</i><span id="viewLabel">Chase</span></button>
-    <button class="hud__btn" id="btnTime"><i>N</i><span id="timeLabel">Day</span></button>
-    <button class="hud__btn" id="btnSound"><i>M</i><span id="soundLabel">Sound on</span></button>
+    <button class="hbtn" id="btnView"><kbd>C</kbd><span id="viewLabel">Third person</span></button>
+    <button class="hbtn" id="btnTime"><kbd>N</kbd><span id="timeLabel">Day</span></button>
+    <button class="hbtn" id="btnSound"><kbd>M</kbd><span id="soundLabel">Sound on</span></button>
+    <button class="hbtn" id="btnPause"><kbd>P</kbd><span>Pause</span></button>
   </div>
 
   <div class="hud__bl">
-    <div class="timing" id="timing">
-      <div class="timing__row"><em>Lap</em><span id="tLap">1</span></div>
-      <div class="timing__row timing__row--big"><em>Current</em><span id="tCur">0:00.00</span></div>
-      <div class="timing__row"><em>Best</em><span id="tBest">—:—</span></div>
+    <div class="timing">
+      <p><em class="mono">Lap</em><span class="mono" id="tLap">1</span></p>
+      <p class="big"><em class="mono">Current</em><span class="mono" id="tCur">0:00.00</span></p>
+      <p><em class="mono">Last</em><span class="mono" id="tLast">—</span></p>
+      <p><em class="mono">Best</em><span class="mono" id="tBest">—</span></p>
     </div>
-    <ol class="standings" id="standings" hidden></ol>
+    <ol class="standings mono" id="standings" hidden></ol>
   </div>
 
   <div class="hud__br">
-    <div class="dial">
-      <svg viewBox="0 0 200 200" aria-hidden="true">
-        <path class="dial__track" d="M28 158 A 92 92 0 1 1 172 158" fill="none" stroke-width="3"/>
-        <path class="dial__fill" id="dialFill" d="M28 158 A 92 92 0 1 1 172 158" fill="none" stroke-width="3"/>
-        <path class="dial__red" d="M138 176 A 92 92 0 0 0 172 158" fill="none" stroke-width="5"/>
-      </svg>
-      <div class="dial__read">
-        <em id="spd">0</em>
-        <span>km/h</span>
-      </div>
-      <div class="dial__gear" id="gear">N</div>
+    <div class="speed"><b class="mono" id="spd">0</b><span class="mono">km/h</span></div>
+    <div class="gearrow">
+      <span class="mono gear" id="gear">N</span>
+      <i class="rev"><b id="revFill"></b></i>
     </div>
-    <div class="rev"><span id="revFill"></span></div>
   </div>
 
-  <div class="hud__hint" id="hint">W to pull away · C to change seat · N for night</div>
-
-  <div class="toast" id="toast" hidden><em id="toastTitle"></em><span id="toastBody"></span></div>
-
-  <!-- race start lights -->
+  <p class="hud__hint mono" id="hint">W to pull away · C to change seat · N for night</p>
+  <div class="toast" id="toast" hidden><em class="mono" id="toastTitle"></em><span class="mono" id="toastBody"></span></div>
   <div class="lights" id="lights" hidden><i></i><i></i><i></i><i></i><i></i></div>
-  <div class="flash" id="flash" aria-hidden="true"></div>
 
-  <!-- touch controls -->
   <div class="touch" id="touch" hidden>
-    <button class="touch__pad touch__pad--l" data-key="left" aria-label="Left"></button>
-    <button class="touch__pad touch__pad--r" data-key="right" aria-label="Right"></button>
-    <button class="touch__pedal touch__pedal--brake" data-key="brake">BRAKE</button>
-    <button class="touch__pedal touch__pedal--gas" data-key="throttle">GO</button>
+    <button class="touch__pad touch__pad--l" data-key="left" aria-label="Steer left"></button>
+    <button class="touch__pad touch__pad--r" data-key="right" aria-label="Steer right"></button>
+    <button class="touch__pedal touch__pedal--brake mono" data-key="brake">Brake</button>
+    <button class="touch__pedal touch__pedal--gas mono" data-key="throttle">Go</button>
   </div>
 </div>
 
 <!-- ═══════════ CHEQUERED FLAG ═══════════ -->
 <div class="dresult" id="dResult" hidden>
-  <div class="dresult__panel">
-    <p class="dintro__eyebrow" id="resultEyebrow">Race complete</p>
+  <div class="panel dresult__panel">
+    <p class="eyebrow"><span>FLAG</span> <b id="resultWhere">THE CIRCUIT</b></p>
     <h2 class="dresult__place" id="resultPlace">—</h2>
-    <p class="dresult__sub" id="resultSub">—</p>
-    <ol class="dresult__table" id="resultTable"></ol>
+    <p class="dresult__sub mono" id="resultSub">—</p>
+    <table class="classif mono" aria-label="Classification">
+      <thead><tr><th>Pos</th><th>Driver</th><th>Laps</th><th>Gap</th></tr></thead>
+      <tbody id="resultTable"></tbody>
+    </table>
     <div class="dresult__actions">
       <button class="btn btn--fill" id="resultAgain"><span>Race again</span></button>
-      <a class="btn btn--ghost" id="resultCar" href="#"><span>Car details</span></a>
-      <a class="btn btn--ghost" href="index.html#collection"><span>The collection</span></a>
+      <a class="btn btn--line" id="resultCar" href="#"><span>The car</span></a>
+      <a class="btn btn--line" href="index.html#collection"><span>Collection</span></a>
     </div>
   </div>
 </div>
 
 <!-- ═══════════ PAUSED ═══════════ -->
 <div class="dpause" id="dPause" hidden>
-  <div class="dpause__panel">
-    <p class="dintro__eyebrow">Paused</p>
+  <div class="panel dpause__panel">
+    <p class="eyebrow"><span>PAUSED</span> <b id="pauseWhere">—</b></p>
     <h2 class="dpause__name" id="pauseCar">—</h2>
     <div class="dpause__actions">
       <button class="btn btn--fill" id="pauseResume"><span>Resume</span></button>
-      <button class="btn btn--ghost" id="pauseReset"><span>Back to the road</span></button>
-      <a class="btn btn--ghost" id="pauseCarLink" href="#"><span>Car details</span></a>
-      <a class="btn btn--ghost" href="index.html#collection"><span>The collection</span></a>
+      <button class="btn btn--line" id="pauseReset"><span>Back on the road</span></button>
+      <a class="btn btn--line" id="pauseCarLink" href="#"><span>The car</span></a>
+      <a class="btn btn--line" href="index.html#collection"><span>Collection</span></a>
     </div>
   </div>
 </div>
@@ -198,6 +202,6 @@
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-<script type="module" src="js/drive/main.js"></script>
+<script type="module" src="assets/js/drive/main.js"></script>
 </body>
 </html>
