@@ -48,8 +48,8 @@ export function Intro({ done, onGone }: { done: boolean; onGone: () => void }) {
   return (
     <div className={"intro" + (leaving ? " out" : "")} role="status" aria-live="polite">
       <div className="intro-ground" />
-      <img className="intro-face" src="portrait.webp" alt="" aria-hidden="true" />
       <div className="intro-type" aria-hidden="true">{identity.name.toUpperCase()}</div>
+      <img className="intro-face" src="portrait.webp" alt="" aria-hidden="true" />
       <div className="intro-scan" aria-hidden="true" />
 
       <div className="intro-brand">
