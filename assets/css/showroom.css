@@ -21,22 +21,44 @@
 main, .foot { position: relative; z-index: 5; }
 .is-loading body { overflow: hidden; }
 
-/* ═══════════ LOADER ═══════════ */
+/* ═══════════ LOADER — an eclipse, drawn live by loader.js ═══════════ */
 .loader {
   position: fixed; inset: 0; z-index: 90; background: var(--penumbra);
-  display: grid; place-items: center; align-content: center; gap: 22px;
+  --r: 120px; --cy: 46vh;
+  transition: opacity 1.1s var(--ease), transform 1.4s var(--ease), filter 1.1s var(--ease);
+  cursor: progress;
 }
-.loader__mark { width: clamp(76px, 9vw, 120px); aspect-ratio: 1; color: var(--corona); }
-.loader__mark path { fill: transparent; stroke: var(--corona); stroke-width: .9; vector-effect: non-scaling-stroke; }
+.loader__sky { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* before the script runs, or without canvas: the mark, still */
+.loader__mark { position: absolute; left: 50%; top: 46%; width: 110px; aspect-ratio: 1; transform: translate(-50%, -50%); color: var(--corona); }
+.loader.is-live .loader__mark { display: none; }
 .loader__word {
-  margin: 8px 0 0; font-weight: 400; font-size: 13px; letter-spacing: .6em; margin-right: -.6em; color: var(--bone);
+  position: absolute; left: 50%; top: calc(var(--cy) + var(--r) * 1.75); transform: translateX(-50%);
+  margin: 0; font-weight: 300; font-size: clamp(14px, 1.4vw, 18px);
+  letter-spacing: 1.4em; margin-right: -1.4em; white-space: nowrap; color: var(--bone);
+  opacity: 0; transition: opacity 1.2s var(--ease), letter-spacing 1.8s var(--ease);
 }
-.loader__read { display: flex; gap: 14px; color: var(--ash); }
-.loader__pct { color: var(--bone); min-width: 3ch; }
-.loader__status { position: absolute; left: var(--pad); bottom: calc(var(--pad) + 18px); margin: 0; color: var(--ash); }
+.loader:not(.is-live) .loader__word, .loader.is-mark .loader__word { opacity: 1; letter-spacing: .6em; }
+.loader__tl, .loader__tr, .loader__status, .loader__cast, .loader__pct {
+  position: absolute; margin: 0; color: var(--ash); font-size: 10px; transition: color .8s var(--ease);
+}
+.loader__tl { left: var(--pad); top: calc(var(--pad) * .8); }
+.loader__tr { right: var(--pad); top: calc(var(--pad) * .8); }
+.loader__status { left: var(--pad); bottom: calc(var(--pad) + 18px); }
+.loader__cast { right: var(--pad); bottom: calc(var(--pad) + 18px); color: var(--bone); min-width: 20ch; text-align: right; }
+.loader__pct { left: 50%; bottom: calc(var(--pad) + 18px); transform: translateX(-50%); }
+.loader__pct b { font-weight: 400; color: var(--bone); margin-left: 8px; }
+.loader.is-total .loader__cast { color: var(--corona); }
+.loader.is-mark .loader__cast { color: var(--corona); }
 .loader__bar { position: absolute; left: var(--pad); right: var(--pad); bottom: var(--pad); height: 1px; background: var(--line); }
 .loader__bar i { display: block; height: 100%; width: 100%; background: var(--bone); transform: scaleX(0); transform-origin: left; }
+/* out: the sky lifts away over the live stage */
+.loader.is-out { opacity: 0; transform: scale(1.08); filter: blur(6px); pointer-events: none; }
 .is-fallback .loader { display: none; }
+@media (max-width: 700px) {
+  .loader__tr, .loader__pct { display: none; }
+  .loader__cast { min-width: 0; }
+}
 
 /* ═══════════ SECTIONS ═══════════ */
 .sec { position: relative; min-height: 100svh; padding: calc(var(--pad) + 60px) var(--pad) var(--pad); display: flex; }

@@ -32,23 +32,10 @@ let stage;
 
 /* ═══════════ LOADER ═══════════ */
 const frame = () => new Promise(r => requestAnimationFrame(() => r()));
-function progress(p, label) {
-  $('#loadPct').textContent = String(Math.round(p)).padStart(3, '0');
-  gsap.to('#loadBar', { scaleX: p / 100, duration: 0.5, ease: 'power2.out' });
-  if (label) $('#loadStatus').textContent = label;
-}
-function drawLoaderMark() {
-  const paths = $$('.loader__mark path');
-  for (const p of paths) {
-    const len = p.getTotalLength();
-    p.style.strokeDasharray = len;
-    p.style.strokeDashoffset = REDUCED ? 0 : len;
-  }
-  if (!REDUCED) gsap.to(paths, { strokeDashoffset: 0, duration: 1.8, stagger: 0.25, ease: 'power2.inOut' });
-}
+/* the eclipse in loader.js is driven by real progress */
+const progress = (p, label) => window.OMENLoader?.progress(p / 100, label);
 
 async function boot() {
-  drawLoaderMark();
   paintMarks();
   progress(6, 'Sampling surface');
   await frame();
@@ -69,7 +56,6 @@ async function boot() {
   stage.showCar(S.car, { instant: true });
   stage.lift.y = -2.2;                         // below the dais, ready to rise
   stage.target = { ...SCENES.hero };
-  stage.now = { ...SCENES.hero, cx: 9, cy: 3.4, cz: 15, exposure: 0, bloom: 1.2 };
   stage.warm();
   await frame();
 
@@ -77,16 +63,18 @@ async function boot() {
   choreograph();
   progress(100, 'Ready');
   markBooted();
-  await new Promise(r => setTimeout(r, REDUCED ? 0 : 420));
+  stage.start();                               // live behind the eclipse
+  await window.OMENLoader?.finish();
   reveal();
 }
 
 function reveal() {
-  stage.start();
   document.documentElement.classList.remove('is-loading');
-  const tl = gsap.timeline();
-  tl.to('#loader', { opacity: 0, duration: REDUCED ? 0.01 : 0.9, ease: 'power2.inOut', onComplete: () => { $('#loader').hidden = true; } });
+  window.OMENLoader?.hide();
   if (REDUCED) { stage.lift.y = 0; return; }
+  /* the fly-in starts as the sky lifts, not behind it */
+  stage.now = { ...SCENES.hero, cx: 9, cy: 3.4, cz: 15, exposure: 0, bloom: 1.2 };
+  const tl = gsap.timeline();
   tl.to(stage.lift, { y: 0, duration: 2.4, ease: 'expo.out' }, 0.2)
     .from('.hero__title .line > span', { yPercent: 110, duration: 1.4, stagger: 0.1, ease: 'expo.out' }, 0.5)
     .from('.hero__top, .hero__foot, .nav', { opacity: 0, y: 16, duration: 1.1, stagger: 0.08, ease: 'power3.out' }, 0.9);
