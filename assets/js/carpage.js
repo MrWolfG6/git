@@ -66,6 +66,7 @@ async function boot() {
   scrollPoses(stage, SCENES, SPIN);
   bindNav(lenis, scrollToEl, $);
   bindReveals(REDUCED);
+  stage.enableDrag([$('#top'), $('#configure')]);
   if (!REDUCED) addEventListener('pointermove', e => {
     stage.pointer.x = (e.clientX / innerWidth - 0.5) * 2;
     stage.pointer.y = (e.clientY / innerHeight - 0.5) * -2;

@@ -34,6 +34,7 @@ export const PROTOS = {
       ['C', -0.20, 1.46, 0.30, 1.45, 0.60, 1.36], ['Q', 1.00, 1.14, 1.46, 0.90], ['L', -2.24, 0.91]
     ],
     houseW: 1.58, lampY: 0.70, tailY: 0.84, badgeY: 0.56,
+    doors: [1.0, 0.9],
     wheel: 'aero', extras: ['blade', 'diffuser']
   },
 
@@ -52,6 +53,7 @@ export const PROTOS = {
       ['C', -1.00, 1.36, -0.30, 1.35, 0.05, 1.28], ['Q', 0.45, 1.12, 0.88, 0.92], ['L', -2.28, 0.92]
     ],
     houseW: 1.52, lampY: 0.72, tailY: 0.82, badgeY: 0.56,
+    doors: [1.25],
     wheel: 'spoke', extras: ['blade', 'vents', 'roof-rack']
   },
 
@@ -67,7 +69,8 @@ export const PROTOS = {
       ['M', -2.26, 1.27], ['L', -2.20, 1.84], ['L', 0.28, 1.86], ['L', 0.96, 1.29], ['L', -2.26, 1.27]
     ],
     houseW: 1.80, lampY: 1.08, tailY: 1.10, badgeY: 0.86,
-    sculpt: { taperF: 0.05, taperR: 0.03, tumble: 0.03, houseTumble: 0.08 },
+    sculpt: { taperF: 0.05, taperR: 0.03, tumble: 0.03, houseTumble: 0.08, archF: 0.02, archR: 0.025, shoulder: 0.006, tuck: 0.015 },
+    doors: [1.0, 0.95],
     wheel: 'terrain', extras: ['cladding', 'roof-rack', 'skid', 'flares']
   },
 
@@ -85,6 +88,7 @@ export const PROTOS = {
       ['C', 0.00, 1.31, 0.30, 1.21, 0.55, 1.07], ['Q', 0.80, 0.95, 1.05, 0.88], ['L', -1.76, 0.88]
     ],
     houseW: 1.40, lampY: 0.66, tailY: 0.80, badgeY: 0.52,
+    sculpt: { archR: 0.065 }, doors: [1.05],
     wheel: 'spoke', extras: ['blade']
   },
 
@@ -102,6 +106,7 @@ export const PROTOS = {
       ['C', 0.00, 1.16, 0.40, 1.12, 0.70, 1.02], ['Q', 0.95, 0.92, 1.25, 0.84], ['L', -1.10, 0.85]
     ],
     houseW: 1.30, lampY: 0.52, tailY: 0.70, badgeY: 0.40,
+    sculpt: { archF: 0.045, archR: 0.08 }, doors: [1.1],
     wheel: 'race', extras: ['fin', 'wing-low', 'diffuser', 'intake', 'canards']
   },
 
@@ -119,7 +124,8 @@ export const PROTOS = {
       ['C', 0.60, 1.48, 1.10, 1.34, 1.50, 1.09], ['L', -1.70, 1.07]
     ],
     houseW: 1.62, lampY: 0.84, tailY: 0.92, badgeY: 0.68,
-    sculpt: { taperF: 0.2, taperR: 0.16, tumble: 0.1, len: 1.2, houseTumble: 0.26 },
+    sculpt: { taperF: 0.2, taperR: 0.16, tumble: 0.1, len: 1.2, houseTumble: 0.26, archF: 0.02, archR: 0.03, shoulder: 0 },
+    doors: [1.4],
     wheel: 'cover', extras: ['lightline']
   },
 
@@ -137,6 +143,7 @@ export const PROTOS = {
       ['C', -0.60, 1.24, 0.10, 1.22, 0.40, 1.12], ['Q', 0.70, 1.00, 1.05, 0.87], ['L', -1.60, 0.89]
     ],
     houseW: 1.46, lampY: 0.60, tailY: 0.76, badgeY: 0.44,
+    sculpt: { archF: 0.05, archR: 0.07 }, doors: [1.1],
     wheel: 'race', extras: ['wing-swan', 'splitter', 'canards', 'scoop', 'diffuser', 'exhaust']
   },
 
@@ -155,7 +162,8 @@ export const PROTOS = {
       ['C', -0.20, 1.10, 0.30, 1.06, 0.55, 0.92], ['Q', 0.75, 0.76, 0.95, 0.64], ['L', -1.30, 0.66]
     ],
     houseW: 0.96, lampY: 0.66, tailY: 0.74, badgeY: 0.50,
-    sculpt: { taperF: 0.16, taperR: 0.04, tumble: 0.04, houseTumble: 0.3 },
+    sculpt: { taperF: 0.16, taperR: 0.04, tumble: 0.04, houseTumble: 0.3, archF: 0.07, archR: 0.07, shoulder: 0 },
+    doors: [],
     wheel: 'race', extras: ['fin', 'wing-lmp', 'splitter', 'diffuser']
   }
 };
@@ -183,6 +191,9 @@ export function makeMaterials() {
     tail: new THREE.MeshStandardMaterial({
       color: 0x2a0d08, emissive: PALETTE.ember, emissiveIntensity: 0.6, roughness: 0.3
     }),
+    /* shut gaps and handles, drawn on the flank; the satin window trim */
+    shut: new THREE.LineBasicMaterial({ color: 0x020204, transparent: true, opacity: 0.9 }),
+    dlo: new THREE.LineBasicMaterial({ color: 0x8e9098, transparent: true, opacity: 0.8 }),
     /* the side profile as a hairline: invisible until a page ghosts the body */
     line: new THREE.LineBasicMaterial({ color: PALETTE.bone, transparent: true, opacity: 0, depthWrite: false }),
     badge: new THREE.MeshStandardMaterial({
@@ -232,54 +243,34 @@ function topAt(pts, x) {
    reads as a tube. So before the normals are creased, the vertices are
    pulled in — a plan taper toward the nose and tail, and tumblehome up
    the flank — and the extrusion becomes a body. */
-function shapeVertices(geo, S) {
-  const pos = geo.attributes.position;
-  const smooth = t => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i);
-    let k = 1;
-    if (S.taperF) k *= 1 - S.taperF * Math.pow(smooth((x - (S.xF - S.len)) / S.len), 2);
-    if (S.taperR) k *= 1 - S.taperR * Math.pow(smooth(((S.xR + S.len) - x) / S.len), 2);
-    if (S.tumble) k *= 1 - S.tumble * Math.pow(smooth((y - S.y0) / (S.y1 - S.y0)), 1.3);
-    pos.setZ(i, pos.getZ(i) * k);
+const smooth01 = t => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
+
+/* How far the flank is pushed in or out at (x, y), as a factor on z.
+   Plan taper and tumblehome make it a body; the arches swelling out, a
+   shoulder crease that catches a highlight and a lower body that tucks
+   under give it volume. The same function places every part that sits on
+   the flank, so nothing floats off the surface or sinks into it. */
+function sculptK(S, x, y) {
+  let k = 1;
+  if (S.taperF) k *= 1 - S.taperF * Math.pow(smooth01((x - (S.xF - S.len)) / S.len), 2);
+  if (S.taperR) k *= 1 - S.taperR * Math.pow(smooth01(((S.xR + S.len) - x) / S.len), 2);
+  if (S.tumble) k *= 1 - S.tumble * Math.pow(smooth01((y - S.y0) / (S.y1 - S.y0)), 1.3);
+  if (S.arches) {
+    /* each arch swells the flank round it: a hip, strongest at the wheel's height */
+    const band = Math.exp(-Math.pow((y - S.archY) / S.archSY, 2) / 2);
+    for (const a of S.arches) k *= 1 + a.s * band * Math.exp(-Math.pow((x - a.x) / a.sx, 2) / 2);
   }
+  if (S.shoulder) k *= 1 + S.shoulder * Math.exp(-Math.pow((y - S.shoulderY) / 0.045, 2) / 2);
+  if (S.tuck) k *= 1 - S.tuck * (1 - smooth01((y - S.tuckY) / 0.28));
+  return k;
 }
 
-/* Earcut fills a lid with long slivers from nose to tail and no
-   interior vertices; once the side is sculpted those slivers bend and
-   the shading streaks. So the lids ExtrudeGeometry builds are thrown
-   away and rebuilt with a grid of interior points (earcut takes each
-   as a one-point hole: a Steiner point), giving the curved flank
-   vertices to bend on. */
-function inside(pts, x, y) {
-  let c = false;
-  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-    const a = pts[i], b = pts[j];
-    if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) c = !c;
-  }
-  return c;
-}
-function edgeDistance(pts, x, y) {
-  let d = Infinity;
-  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-    const a = pts[j], b = pts[i];
-    const dx = b.x - a.x, dy = b.y - a.y, L = dx * dx + dy * dy || 1;
-    const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / L));
-    d = Math.min(d, Math.hypot(a.x + t * dx - x, a.y + t * dy - y));
-  }
-  return d;
-}
-function lidTriangles(shape, curveSegments, spacing) {
-  let contour = shape.extractPoints(curveSegments).shape;
-  if (contour.length > 1 && contour[0].equals(contour[contour.length - 1])) contour = contour.slice(0, -1);
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  for (const p of contour) { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); }
-  const steiner = [];
-  for (let x = minX + spacing / 2; x < maxX; x += spacing)
-    for (let y = minY + spacing / 2; y < maxY; y += spacing)
-      if (inside(contour, x, y) && edgeDistance(contour, x, y) > spacing * 0.45) steiner.push(new THREE.Vector2(x, y));
-  const faces = THREE.ShapeUtils.triangulateShape(contour, steiner.map(p => [p]));
-  return { pts: [...contour, ...steiner], faces };
+/* A side profile extruded straight across is a slab: from the front it
+   reads as a tube. So before the normals are creased, the vertices are
+   pulled by sculptK and the extrusion becomes a body. */
+function shapeVertices(geo, S) {
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setZ(i, pos.getZ(i) * sculptK(S, pos.getX(i), pos.getY(i)));
 }
 
 function extrude(shape, width, bevel, detail, sculpt) {
@@ -354,7 +345,10 @@ function buildWheel(M, R, W, style, outward, detail) {
   if (outward < 0) wallRing.rotation.y = Math.PI;       // RingGeometry faces +z
   spin.add(wallRing);
   cyl(rimR, rimR, W * 0.8, M.satin, 0, true);                                                         // barrel
-  cyl(rimR * 0.98, rimR * 0.98, 0.02, M.trim, face - outward * 0.04);                                 // back plate
+  cyl(rimR * 0.98, rimR * 0.98, 0.02, M.trim, face - outward * 0.11);                                 // back plate
+  /* the brake disc, seen between the spokes: a satin face, a dark hat */
+  cyl(rimR * 0.8, rimR * 0.8, 0.02, M.satin, face - outward * 0.06);
+  cyl(rimR * 0.34, rimR * 0.34, 0.03, M.trim, face - outward * 0.05);
 
   if (style === 'aero' || style === 'cover') {
     /* a near-flush disc; the cover is fully flush, the aero has slots */
@@ -385,8 +379,8 @@ function buildWheel(M, R, W, style, outward, detail) {
   cyl(rimR * 0.2, rimR * 0.2, 0.05, style === 'race' ? M.satin : M.trim, face + outward * 0.02);     // centre
 
   /* the brake caliper does not spin */
-  const cal = new THREE.Mesh(new THREE.BoxGeometry(R * 0.36, R * 0.5, 0.07), M.trim);
-  cal.position.set(-R * 0.52, R * 0.2, face - outward * 0.09);
+  const cal = new THREE.Mesh(new THREE.BoxGeometry(rimR * 0.3, rimR * 0.46, 0.05), M.satin);
+  cal.position.set(-rimR * 0.62, rimR * 0.26, face - outward * 0.035);     // straddling the disc's edge
   hub.add(cal);
   return hub;
 }
@@ -469,11 +463,23 @@ export function buildCarModel(protoId, opts = {}) {
 
   const bodyTop = Math.max(...profilePts.map(p => p.y));
   const sc = P.sculpt || {};
+  const beltAt = x => topAt(profilePts, x);
   const bodySculpt = {
     xF: xFrontEnd + P.bevel, xR: xRearEnd - P.bevel, len: sc.len ?? 0.95,
     taperF: sc.taperF ?? 0.13, taperR: sc.taperR ?? 0.08,
-    tumble: sc.tumble ?? 0.06, y0: bodyTop * 0.5, y1: bodyTop + P.bevel
+    tumble: sc.tumble ?? 0.06, y0: bodyTop * 0.5, y1: bodyTop + P.bevel,
+    /* volume: hips over the arches (the rear stronger), a shoulder crease,
+       a lower body that tucks under */
+    arches: [
+      { x: P.axleF, s: sc.archF ?? 0.035, sx: archR * 1.35 },
+      { x: P.axleR, s: sc.archR ?? 0.055, sx: archR * 1.5 }
+    ],
+    archY: P.sill + archR * 0.55, archSY: archR * 0.75,
+    shoulder: sc.shoulder ?? 0.014, shoulderY: Math.min(beltAt(0), beltAt(P.axleR)) - 0.09,
+    tuck: sc.tuck ?? 0.035, tuckY: P.rocker
   };
+  /* the flank's z at (x, y), for anything that sits on it */
+  const flankZ = (x, y) => (P.width / 2) * sculptK(bodySculpt, x, y);
   const body = new THREE.Mesh(extrude(shape, P.width, P.bevel, detail, bodySculpt), M.paint);
   body.name = 'paintpart';
   shell.add(body);
@@ -497,12 +503,12 @@ export function buildCarModel(protoId, opts = {}) {
   const halfW = P.width / 2;
 
   /* ── greenhouse ── */
-  let houseTopX = 0, windscreen = [0.8, 1.0];
+  let houseTopX = 0, windscreen = [0.8, 1.0], houseSculptRef = null;
   if (P.house) {
     const h = trace(P.house, new THREE.Shape());
     const hp = h.getPoints(16);
     const ys = hp.map(p => p.y), xs = hp.map(p => p.x);
-    const houseSculpt = {
+    const houseSculpt = houseSculptRef = {
       xF: Math.max(...xs), xR: Math.min(...xs), len: 0.5, taperF: 0.1, taperR: 0.06,
       tumble: sc.houseTumble ?? 0.2, y0: Math.min(...ys), y1: Math.max(...ys)
     };
@@ -530,18 +536,74 @@ export function buildCarModel(protoId, opts = {}) {
   const tx = tailX(P.tailY);
   put(new THREE.BoxGeometry(0.035, 0.04, P.width * 0.8), M.tail, tx + 0.012, P.tailY, 0, 'tail');
 
+  /* ── the details that tell the eye it is a real object ── */
+  /* the lamp unit: a smoked band the light bar sits in; a lens behind the tail bar */
+  put(new THREE.BoxGeometry(0.03, 0.07, P.width * 0.62), M.trim, lx - 0.02, P.lampY - 0.03, 0);
+  put(new THREE.BoxGeometry(0.03, 0.075, P.width * 0.84), M.trim, tx + 0.006, P.tailY, 0);
+
+  /* lines drawn on the flank itself: shut gaps, handles, the window trim */
+  const onFlank = (pts, side, mat, lift = 0.0025) => {
+    const geo = new THREE.BufferGeometry().setFromPoints(pts.map(([x, y]) => new THREE.Vector3(x, y, side * (flankZ(x, y) + lift))));
+    const l = new THREE.Line(geo, mat);
+    l.name = 'detail';
+    shell.add(l);
+  };
+  const vertical = (x, y0, y1, n = 10) => Array.from({ length: n }, (_, i) => [x, y0 + (y1 - y0) * i / (n - 1)]);
+  if (P.house && P.doors?.length !== 0) {
+    let xEdge = windscreen[0] - 0.02;
+    const doors = P.doors || [1.1];
+    for (const s of [-1, 1]) {
+      let xe = xEdge;
+      onFlank(vertical(xe, P.rocker + 0.09, beltAt(xe) - 0.035), s, M.shut);
+      for (const len of doors) {
+        const xr = xe - len;
+        onFlank(vertical(xr, P.rocker + 0.09, beltAt(xr) - 0.035), s, M.shut);
+        const hy = beltAt(xr + 0.2) - 0.13;                      // a flush handle, near the door's trailing edge
+        onFlank([[xr + 0.1, hy], [xr + 0.27, hy]], s, M.shut, 0.004);
+        xe = xr;
+      }
+    }
+  }
+  if (P.house) {
+    /* window trim: satin along the base of the glass */
+    const hp0 = trace(P.house, new THREE.Path()).getPoints(16);
+    const yb = Math.min(...hp0.map(p => p.y)) + 0.012;
+    const xs0 = hp0.map(p => p.x), xa = Math.min(...xs0) + 0.08, xb = Math.max(...xs0) - 0.06;
+    for (const s of [-1, 1]) {
+      const pts = Array.from({ length: 16 }, (_, i) => new THREE.Vector3(xa + (xb - xa) * i / 15, yb, s * P.houseW / 2));
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      shapeVertices(geo, houseSculptRef);
+      const l = new THREE.Line(geo, M.dlo);
+      l.name = 'detail';
+      shell.add(l);
+    }
+    /* wing mirrors, on the flank at the base of the A-pillar */
+    const [wx0, wy0] = windscreen;
+    const mx = wx0 - 0.16, my = wy0 + 0.07;
+    for (const s of [-1, 1]) {
+      const z0 = flankZ(mx, wy0 - 0.02);
+      const stalk = put(new THREE.BoxGeometry(0.06, 0.018, 0.12), M.trim, mx, my - 0.03, s * (z0 + 0.05));
+      stalk.rotation.x = s * 0.2;
+      const housing = put(new THREE.SphereGeometry(1, 18, 12), M.paint, mx - 0.01, my, s * (z0 + 0.13), 'paintpart');
+      housing.scale.set(0.1, 0.05, 0.075);
+      const glassFace = put(new THREE.CircleGeometry(1, 16), M.glass, mx - 0.075, my, s * (z0 + 0.13));
+      glassFace.scale.set(0.045, 0.036, 1);
+      glassFace.rotation.y = -Math.PI / 2;                        // the mirror looks backwards, down -x
+    }
+  }
+
   /* ── the extras that give each car its character ── */
   const E = new Set(P.extras || []);
   const bodyLen = xFrontEnd - xRearEnd;
 
   if (E.has('blade')) for (const s of [-1, 1])
-    put(new THREE.BoxGeometry(P.axleF - P.axleR - archR * 2 - 0.14, 0.09, 0.02), M.satin, (P.axleF + P.axleR) / 2, P.rocker + 0.08, s * (halfW + 0.002));
+    put(new THREE.BoxGeometry(P.axleF - P.axleR - archR * 2 - 0.14, 0.09, 0.02), M.satin, (P.axleF + P.axleR) / 2, P.rocker + 0.08, s * (flankZ((P.axleF + P.axleR) / 2, P.rocker + 0.08) + 0.004));
   if (E.has('cladding')) for (const s of [-1, 1]) {
-    put(new THREE.BoxGeometry(P.axleF - P.axleR - archR * 2 - 0.1, 0.2, 0.03), M.trim, (P.axleF + P.axleR) / 2, P.rocker + 0.1, s * (halfW + 0.005));
+    put(new THREE.BoxGeometry(P.axleF - P.axleR - archR * 2 - 0.1, 0.2, 0.03), M.trim, (P.axleF + P.axleR) / 2, P.rocker + 0.1, s * (flankZ((P.axleF + P.axleR) / 2, P.rocker + 0.1) + 0.006));
   }
   if (E.has('flares')) for (const s of [-1, 1]) for (const ax of [P.axleF, P.axleR]) {
     /* the torus lies in XY, the side plane, as a flare must: no rotation */
-    put(new THREE.TorusGeometry(archR + 0.01, 0.045, 6, Math.round(22 * detail), Math.PI), M.trim, ax, P.sill, s * (halfW + 0.012));
+    put(new THREE.TorusGeometry(archR + 0.01, 0.045, 6, Math.round(22 * detail), Math.PI), M.trim, ax, P.sill, s * (flankZ(ax, P.sill + archR * 0.5) + 0.012));
   }
   if (E.has('skid')) {
     put(new THREE.BoxGeometry(0.5, 0.05, P.width * 0.6), M.satin, xFrontEnd - 0.12, P.rocker + 0.04, 0);
@@ -567,7 +629,7 @@ export function buildCarModel(protoId, opts = {}) {
     c.rotation.z = 0.2;
   }
   if (E.has('intake')) for (const s of [-1, 1])
-    put(new THREE.BoxGeometry(0.62, 0.2, 0.02), M.trim, P.axleR + archR + 0.4, 0.56, s * (halfW + 0.002));
+    put(new THREE.BoxGeometry(0.62, 0.2, 0.02), M.trim, P.axleR + archR + 0.4, 0.56, s * (flankZ(P.axleR + archR + 0.4, 0.56) + 0.004));
   if (E.has('scoop'))
     put(new THREE.BoxGeometry(0.6, 0.1, 0.26), M.carbon, houseTopX - 0.25, 1.23, 0);
   if (E.has('exhaust')) for (const s of [-1, 1]) {
@@ -607,7 +669,7 @@ export function buildCarModel(protoId, opts = {}) {
   if (E.has('wing-lmp')) wing(xRearEnd + 0.18, 1.02, P.width * 0.98, 0.34, true);
 
   if (E.has('lightline')) for (const s of [-1, 1])
-    put(new THREE.BoxGeometry(bodyLen * 0.8, 0.012, 0.012), M.lamp, 0, 0.74, s * (halfW + 0.004), 'lamp');
+    put(new THREE.BoxGeometry(bodyLen * 0.6, 0.012, 0.012), M.lamp, 0, 0.74, s * (flankZ(0, 0.74) + 0.004), 'lamp');
 
   /* ── wheels ── */
   const tyreW = P.tyreW;
