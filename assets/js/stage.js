@@ -395,11 +395,6 @@ export class Stage {
     if (x > 0.005 && !cur.pt) {
       cur.pt = buildPowertrain(cur.car, this.clip);
       cur.model.getObjectByName('shell').add(cur.pt.group);
-      /* a hairline outline keeps the shape legible while it is a ghost */
-      const body = cur.model.getObjectByName('shell').children.find(o => o.name === 'paintpart');
-      cur.edges = new THREE.LineSegments(new THREE.EdgesGeometry(body.geometry, 42),
-        new THREE.LineBasicMaterial({ color: PALETTE.bone, transparent: true, opacity: 0, clippingPlanes: [this.clip], depthWrite: false }));
-      body.add(cur.edges);
     }
     if (Math.abs(x - cur.xray) > 0.001) {
       cur.xray = x;
@@ -407,9 +402,10 @@ export class Stage {
       const ghost = (m, floor) => { m.opacity = 1 - (1 - floor) * e; m.depthWrite = e < 0.05; };
       ghost(M.paint, 0.07); ghost(M.trim, 0.2); ghost(M.satin, 0.35); ghost(M.carbon, 0.2); ghost(M.tyre, 0.3);
       M.glass.opacity = 0.86 * (1 - 0.85 * e);
-      /* the lamp bar would blaze through a ghost body: it dims with it */
-      M.lamp.emissiveIntensity = 1.6 * (1 - 0.85 * e);
-      if (cur.edges) cur.edges.material.opacity = 0.26 * e;
+      /* the lamp bar would blaze through a ghost body: it fades with it */
+      M.lamp.opacity = 1 - 0.9 * e;
+      /* and the drawn side profile keeps the shape: one hairline per flank */
+      M.line.opacity = 0.55 * e;
       if (cur.pt) cur.pt.group.visible = e > 0.01;
     }
     if (cur.pt && cur.pt.group.visible) cur.pt.animate(this.t, x);
@@ -474,7 +470,7 @@ export class Stage {
     materials.tail.emissiveIntensity = 0.03;   // parked: the brake light is off
     /* everything that ghosts in x-ray renders in the transparent pass; at
        opacity 1 that is indistinguishable from opaque */
-    for (const k of ['paint', 'trim', 'satin', 'carbon', 'tyre']) materials[k].transparent = true;
+    for (const k of ['paint', 'trim', 'satin', 'carbon', 'tyre', 'lamp']) materials[k].transparent = true;
     const model = buildCarModel(car.proto, { materials, tier: this.tier });
     model.visible = false;
     this.scene.add(model);
