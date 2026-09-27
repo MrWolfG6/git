@@ -26,19 +26,30 @@ function keys(pts) {
   };
 }
 
+/* OMEN's own language, from the eclipse, not from anyone's car:
+   - the umbra visor: the whole greenhouse is one black shape, no pillars
+   - the crescent: a scoop cut into each flank, lit like the mark
+   - the horizon: one hairline of light across the nose, no lamp eyes
+   - cab-forward, long wheelbase, short overhangs, a flat low bonnet
+   - a cut tail: square and sharp, the ember bar set in the cut */
 export const CONCEPT = {
-  xR: -2.22, xF: 2.30, noseLen: 0.42, tailLen: 0.26,
-  axleF: 1.40, axleR: -1.20, wheelR: 0.35, archR: 0.40, trackZ: 0.86, tyreW: 0.30,
-  bot:  [[-2.3, 0.30], [-1.9, 0.17], [-1.4, 0.14], [1.2, 0.14], [1.9, 0.17], [2.3, 0.26]],
-  belt: [[-2.3, 0.80], [-1.9, 0.86], [-1.2, 0.89], [-0.4, 0.85], [0.6, 0.81], [1.35, 0.815], [1.85, 0.74], [2.15, 0.62], [2.3, 0.52]],
-  /* the roof line: cabin from the windscreen base to the long fastback */
-  top:  [[-2.3, 0.80], [-1.95, 0.87], [-1.3, 1.02], [-0.7, 1.20], [-0.1, 1.27], [0.35, 1.22], [0.95, 0.85], [1.35, 0.82], [2.15, 0.63], [2.3, 0.52]],
-  /* plan view: haunches over the rear wheels, a waist at the doors */
-  hw:   [[-2.3, 0.86], [-1.9, 0.97], [-1.25, 1.01], [-0.6, 0.955], [0.3, 0.94], [1.1, 0.965], [1.6, 0.95], [2.1, 0.86], [2.3, 0.74]],
-  cabin: [-1.95, 0.98]              // the greenhouse runs between these
+  xR: -2.16, xF: 2.26, noseLen: 0.34, noseP: 2.0, tailLen: 0.17, tailP: 3.4,
+  axleF: 1.56, axleR: -1.46, wheelR: 0.37, archR: 0.415, trackZ: 0.87, tyreW: 0.31,
+  bot:  [[-2.2, 0.38], [-2.0, 0.24], [-1.8, 0.16], [-1.4, 0.14], [1.3, 0.14], [1.9, 0.16], [2.26, 0.24]],
+  /* the shoulder: nearly level, rising a touch to the tail */
+  belt: [[-2.2, 0.86], [-1.5, 0.87], [-0.4, 0.84], [0.8, 0.81], [1.5, 0.79], [1.95, 0.72], [2.26, 0.56]],
+  /* cab-forward: the screen starts over the front axle, the roof runs long and ends square */
+  top:  [[-2.2, 0.87], [-1.98, 0.89], [-1.8, 0.98], [-1.3, 1.10], [-0.5, 1.19], [0.15, 1.20], [0.75, 1.10], [1.2, 0.94], [1.55, 0.81], [1.95, 0.73], [2.26, 0.56]],
+  /* plan: nearly parallel sides, a gentle waist, square shoulders at the tail */
+  hw:   [[-2.2, 0.94], [-1.9, 1.0], [-1.4, 1.035], [-0.7, 0.975], [0.4, 0.955], [1.1, 0.965], [1.6, 0.985], [2.0, 0.93], [2.26, 0.82]],
+  cabin: [-1.98, 1.54],
+  cabinTop: 0.58,                     // strong tumblehome: shoulders you can see
+  dip: 0.015,                         // the bonnet barely drops below the wings: flat, not a 911's valleys
+  visor: true,                        // the greenhouse is all glass: the umbra
+  crescent: { x: -0.2, y: 0.46, r: 0.34, dx: 0.17, dy: 0.03, r2: 0.3, depth: 0.05, sx: 2.3 }
 };
 
-export function buildLoftBody(C, mats, nx = 260, ns = 72) {
+export function buildLoftBody(C, mats, nx = 280, ns = 110) {
   const bot = keys(C.bot), belt = keys(C.belt), top = keys(C.top), hw = keys(C.hw);
   const [c0, c1] = C.cabin;
 
@@ -47,10 +58,9 @@ export function buildLoftBody(C, mats, nx = 260, ns = 72) {
     const yb = bot(x), yl = belt(x), yt = top(x), w = hw(x);
     const cab = Math.max(0, yt - yl);                      // greenhouse height here
     const yMax = lerp(yb, yl, 0.62);                         // widest point: low on the flank
-    const cwBase = w * 0.80, cwTop = w * lerp(0.80, 0.66, smooth(cab / 0.3));
+    const cwBase = w * 0.80, cwTop = w * lerp(0.80, C.cabinTop ?? 0.66, smooth(cab / 0.3));
     /* the wings stand proud of the bonnet and the deck: dip the centre */
-    const dip = 0.09 * smooth((x - 0.85) / 0.35) * (1 - smooth((x - 2.0) / 0.3))
-              + 0.035 * smooth((-1.75 - x) / 0.25) * (1 - smooth((-2.1 - x) / 0.15));
+    const dip = (C.dip ?? 0.09) * smooth((x - C.cabin[1] + 0.1) / 0.35) * (1 - smooth((x - 2.0) / 0.3));
     return [
       [0, yb], [w * 0.55, yb], [w * 0.9, yb + 0.02], [w * 0.985, yb + 0.1],
       [w, yMax], [w * 0.975, yl - 0.07], [w * 0.9, yl - 0.005],
@@ -71,7 +81,7 @@ export function buildLoftBody(C, mats, nx = 260, ns = 72) {
     /* the ends: the section shrinks to its centre on a superellipse,
        which rounds the nose and tail in plan and side at once */
     const un = clamp01((x - (C.xF - C.noseLen)) / C.noseLen), ut = clamp01(((C.xR + C.tailLen) - x) / C.tailLen);
-    const u = Math.max(un, ut), p = un > ut ? 2.2 : 3.2;
+    const u = Math.max(un, ut), p = un > ut ? C.noseP : C.tailP;
     const f = Math.pow(1 - Math.pow(u, p), 1 / p);
     const yc = un > ut ? lerp(bot(x), belt(x), 0.5) : lerp(bot(x), belt(x), 0.62);
 
@@ -81,6 +91,13 @@ export function buildLoftBody(C, mats, nx = 260, ns = 72) {
       const side = j <= ns ? 1 : -1;
       const p3 = curve.getPoint(t);
       let z = p3.x * f * side, y = yc + (p3.y - yc) * f;
+      /* the crescent: a shallow scoop on the flank, two offset circles */
+      if (C.crescent && t > 0.08 && t < 0.52) {
+        const K = C.crescent, e = 0.055;
+        const sx = K.sx || 1, dA = Math.hypot((x - K.x) / sx, y - K.y), dB = Math.hypot((x - K.x - K.dx * sx) / sx, y - K.y - K.dy);
+        const m = smooth((K.r - dA) / e) * smooth((dB - K.r2) / e);
+        z *= 1 - K.depth * m;
+      }
       /* wheel openings: marked here, cut cleanly once the grid exists */
       let arch = -1;
       if (t < 0.56) for (const [k, ax] of [C.axleF, C.axleR].entries()) {
@@ -91,10 +108,10 @@ export function buildLoftBody(C, mats, nx = 260, ns = 72) {
       inArch.push(arch);
       pos.push(x, y, z);
       /* the windows, by where they sit on the section and along the car */
-      const W = cab > 0.04 && (
+      const W = cab > 0.04 && (C.visor ? t > 0.64 : (
         (t > 0.665 && t < 0.83 && x > -1.40 && x < 0.84 - (t - 0.665) * 2.2) ||   // side glass, raked at the A-pillar
         (t > 0.80 && x > 0.42 && x < C.cabin[1] - 0.03) ||                       // windscreen
-        (t > 0.86 && x > -1.78 && x < -0.98));                                   // rear screen
+        (t > 0.86 && x > -1.78 && x < -0.98)));                                  // rear screen
       cat.push(W ? 1 : 0);
     }
   }
@@ -178,44 +195,28 @@ export function buildLoftDetails(C, body, M) {
   };
   const line = (pts, mat) => { const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat); g.add(l); return l; };
 
-  /* headlamps: a lens set into the leading edge of each wing */
-  for (const s of [-1, 1]) {
-    const lens = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 16), M.lensMat);
-    lens.scale.set(0.17, 0.04, 0.12);
-    const lx = 2.0, ly = 0.645;
-    lens.position.set(lx, ly - 0.012, s * (skin(lx, ly) - 0.16));
-    lens.rotation.set(0, 0, -0.45);
-    g.add(lens);
-  }
-  /* tail: one bar across the full width, the car's signature */
-  band(0.74, false, 0.011, M.tail, 0.93);
-  /* the intake: a dark mouth across the lower nose, a slimmer one at the tail */
-  for (const y of [0.30, 0.33, 0.36]) band(y, true, 0.02, M.trim, 0.72);
-  for (const y of [0.3, 0.33]) band(y, false, 0.02, M.trim, 0.8);
-
+  /* the horizon: one hairline of light across the whole nose */
+  band(0.60, true, 0.007, M.lamp, 0.94);
+  /* the tail is cut square; the ember bar sits in the cut */
+  band(0.80, false, 0.012, M.tail, 0.97);
+  /* a slim dark intake low in the nose, a diffuser lip at the tail */
+  band(0.31, true, 0.018, M.trim, 0.7);
+  band(0.24, false, 0.02, M.trim, 0.85);
   for (const s of [-1, 1]) {
     /* the door: shut lines front and rear, a flush handle */
-    for (const xd of [0.78, -0.42]) {
+    for (const xd of [1.05, -0.62]) {
       const pts = [];
       for (let y = 0.2; y <= 0.84; y += 0.02) {
-        const dx = xd > 0 ? (y - 0.2) * 0.12 : 0;          // the front shut follows the rake of the wing
+        const dx = xd > 0 ? (y - 0.2) * 0.1 : 0;           // the front shut leans with the screen
         pts.push(new THREE.Vector3(xd - dx, y, s * (skin(xd - dx, y) + 0.002)));
       }
       line(pts, M.shut);
     }
-    const hy = 0.72, hx0 = -0.25, hx1 = -0.05;
+    const hy = 0.74, hx0 = -0.45, hx1 = -0.25;
     const hp = [];
     for (let x = hx0; x <= hx1 + 1e-6; x += 0.025) hp.push(new THREE.Vector3(x, hy, s * (skin(x, hy) + 0.003)));
     line(hp, M.shut);
     /* the mirror, on a slim arm from the door top */
-    const mx = 0.62, my = 0.9, z0 = skin(mx, 0.83);
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.14), M.trim);
-    arm.position.set(mx, my - 0.02, s * (z0 + 0.04));
-    g.add(arm);
-    const cap = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 14), M.paint);
-    cap.scale.set(0.12, 0.055, 0.09);
-    cap.position.set(mx + 0.02, my + 0.02, s * (z0 + 0.14));
-    g.add(cap);
   }
   return g;
 }
