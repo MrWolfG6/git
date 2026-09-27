@@ -126,6 +126,10 @@ img, svg, canvas { display: block; }
 .xl b { font-weight: 400; color: var(--bone); font-size: 11px; letter-spacing: .08em; }
 @media (max-width: 700px) { .xl span { font-size: 8.5px; } .xl b { font-size: 10px; } }
 
+/* ── the car can be taken by hand ── */
+[data-drag] { cursor: grab; touch-action: pan-y; }
+.is-dragging, .is-dragging * { cursor: grabbing !important; user-select: none; }
+
 /* ── the mark, as SVG ── */
 .mark { width: 100%; height: 100%; overflow: visible; }
 .mark path { fill: currentColor; }

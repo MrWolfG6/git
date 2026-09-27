@@ -107,6 +107,7 @@ function choreograph() {
   bindNav(S.lenis, scrollToEl, $);
   bindReveals(REDUCED);
   initRail($$('[data-scene]'), REDUCED);
+  stage.enableDrag([$('#hero'), $('#collection'), $('#configure')]);
 
   /* counters, in the mono, when they are read */
   for (const el of $$('[data-count]')) {

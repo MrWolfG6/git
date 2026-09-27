@@ -66,6 +66,8 @@ export class Stage {
     this.spinRate = 0;
     this.lift = { y: 0 };        // the rise/sink: its own axis too
     this.pulse = 0;              // a beat of light when something changes; decays on its own
+    this.spinVel = 0;            // a turn the visitor gave it, decaying
+    this.userHold = 0;           // seconds before a turned car eases back to its pose
     this.pointer = { x: 0, y: 0 };
     this.target = pose([5.6, 1.6, 7.4], [0.2, 0.7, 0], -0.5, 1.0, 0.3, 0);
     this.now = { ...this.target };
@@ -406,6 +408,7 @@ export class Stage {
       M.lamp.opacity = 1 - 0.9 * e;
       /* and the drawn side profile keeps the shape: one hairline per flank */
       M.line.opacity = 0.55 * e;
+      M.shut.opacity = 0.9 * (1 - e); M.dlo.opacity = 0.8 * (1 - e);
       if (cur.pt) cur.pt.group.visible = e > 0.01;
     }
     if (cur.pt && cur.pt.group.visible) cur.pt.animate(this.t, x);
@@ -567,8 +570,14 @@ export class Stage {
     const n = this.now;
     /* the turntable spins where a section asks for it, and unwinds to
        the nearest whole turn everywhere else, so the poses still land */
-    if (this.idle && this.spinRate) this.turn += this.spinRate * dt;
-    else this.turn = damp(this.turn, Math.round(this.turn / (Math.PI * 2)) * Math.PI * 2, 1.6, dt);
+    /* a visitor's turn carries on under its own inertia, holds a moment,
+       then the car eases back to the pose it was in */
+    this.turn += this.spinVel * dt;
+    this.spinVel = damp(this.spinVel, 0, this.dragging ? 30 : 2.2, dt);
+    this.userHold = Math.max(0, this.userHold - dt);
+    if (this.dragging || this.userHold > 0) { /* the visitor has it */ }
+    else if (this.idle && this.spinRate) this.turn += this.spinRate * dt;
+    else this.turn = damp(this.turn, Math.round(this.turn / (Math.PI * 2)) * Math.PI * 2, 1.2, dt);
 
     const yaw = n.rotY + this.turn;
     const cur = this.current;
@@ -611,6 +620,39 @@ export class Stage {
 
     if (this.composer) this.composer.render();
     else this.renderer.render(this.scene, this.camera);
+  }
+
+  /* Grab the car and turn it. Horizontal drags turn; vertical ones still
+     scroll the page. Links and controls are left alone. */
+  enableDrag(areas) {
+    let lastX = 0, lastT = 0, id = null;
+    const down = e => {
+      if (e.button > 0 || e.target.closest('a, button, input, select, textarea, label')) return;
+      id = e.pointerId; lastX = e.clientX; lastT = performance.now();
+      this.dragging = true; this.spinVel = 0;
+      document.documentElement.classList.add('is-dragging');
+    };
+    const move = e => {
+      if (e.pointerId !== id) return;
+      const now = performance.now(), dx = e.clientX - lastX;
+      const dt = Math.max(1, now - lastT) / 1000;
+      const d = dx * 0.0065;
+      this.turn += d;
+      this.spinVel = d / dt;
+      lastX = e.clientX; lastT = now;
+    };
+    const up = e => {
+      if (e.pointerId !== id) return;
+      id = null; this.dragging = false; this.userHold = 3.5;
+      document.documentElement.classList.remove('is-dragging');
+    };
+    for (const a of areas) {
+      a.dataset.drag = '1';
+      a.addEventListener('pointerdown', down);
+    }
+    addEventListener('pointermove', move, { passive: true });
+    addEventListener('pointerup', up);
+    addEventListener('pointercancel', up);
   }
 
   /* compile everything once, so the first scroll does not hitch */
