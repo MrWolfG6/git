@@ -183,6 +183,8 @@ export function makeMaterials() {
     tail: new THREE.MeshStandardMaterial({
       color: 0x2a0d08, emissive: PALETTE.ember, emissiveIntensity: 0.6, roughness: 0.3
     }),
+    /* the side profile as a hairline: invisible until a page ghosts the body */
+    line: new THREE.LineBasicMaterial({ color: PALETTE.bone, transparent: true, opacity: 0, depthWrite: false }),
     badge: new THREE.MeshStandardMaterial({
       color: PALETTE.corona, emissive: PALETTE.corona, emissiveIntensity: 0.25, metalness: 0.7, roughness: 0.32
     })
@@ -467,16 +469,28 @@ export function buildCarModel(protoId, opts = {}) {
 
   const bodyTop = Math.max(...profilePts.map(p => p.y));
   const sc = P.sculpt || {};
-  const body = new THREE.Mesh(extrude(shape, P.width, P.bevel, detail, {
+  const bodySculpt = {
     xF: xFrontEnd + P.bevel, xR: xRearEnd - P.bevel, len: sc.len ?? 0.95,
     taperF: sc.taperF ?? 0.13, taperR: sc.taperR ?? 0.08,
     tumble: sc.tumble ?? 0.06, y0: bodyTop * 0.5, y1: bodyTop + P.bevel
-  }), M.paint);
+  };
+  const body = new THREE.Mesh(extrude(shape, P.width, P.bevel, detail, bodySculpt), M.paint);
   body.name = 'paintpart';
   shell.add(body);
 
   /* the extruded side surface sits one bevel outside the outline */
   const outline = shape.getPoints(24);
+
+  /* The drawn profile, on both flanks, sculpted exactly as the body is:
+     the one line every OMEN is made from. Shown when the body ghosts. */
+  const profileLine = (pts, z, sculpt) => {
+    const geo = new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(p.x, p.y, z)));
+    shapeVertices(geo, sculpt);
+    const l = new THREE.LineLoop(geo, M.line);
+    l.name = 'profile';
+    shell.add(l);
+  };
+  for (const s of [-1, 1]) profileLine(outline, s * P.width / 2, bodySculpt);
   const noseX = y => extremeXAt(outline, y, true) + P.bevel;
   const tailX = y => extremeXAt(outline, y, false) - P.bevel;
   const roofAt = x => topAt(profilePts, x) + P.bevel;
@@ -488,10 +502,12 @@ export function buildCarModel(protoId, opts = {}) {
     const h = trace(P.house, new THREE.Shape());
     const hp = h.getPoints(16);
     const ys = hp.map(p => p.y), xs = hp.map(p => p.x);
-    const glass = new THREE.Mesh(extrude(h, P.houseW, 0.03, detail, {
+    const houseSculpt = {
       xF: Math.max(...xs), xR: Math.min(...xs), len: 0.5, taperF: 0.1, taperR: 0.06,
       tumble: sc.houseTumble ?? 0.2, y0: Math.min(...ys), y1: Math.max(...ys)
-    }), M.glass);
+    };
+    const glass = new THREE.Mesh(extrude(h, P.houseW, 0.03, detail, houseSculpt), M.glass);
+    for (const s of [-1, 1]) profileLine(h.getPoints(24), s * P.houseW / 2, houseSculpt);
     glass.name = 'glass';
     shell.add(glass);
     let top = -Infinity;

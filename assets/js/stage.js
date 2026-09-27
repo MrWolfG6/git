@@ -21,6 +21,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 import { buildCarModel, makeMaterials, setPaint } from './builder.js';
 import { markGeometry, PALETTE } from './brand.js';
+import { buildPowertrain } from './powertrain.js';
 import { PAINTS } from './cars.js';
 import { TIER, REDUCED, damp } from './common.js';
 
@@ -32,9 +33,10 @@ const DAIS_R = 3.5;
    turns with the car), the car's yaw, the exposure, the bloom, and how
    far the page dims the stage behind its copy. `aw` blends the aim from
    the car's frame (0) to world space (1), for shots of the monolith. */
-export const pose = (cam, aim, rotY, exposure = 1, bloom = 0.35, scrim = 0, aw = 0) =>
-  ({ cx: cam[0], cy: cam[1], cz: cam[2], ax: aim[0], ay: aim[1], az: aim[2], rotY, exposure, bloom, scrim, aw });
-export const POSE_KEYS = ['cx', 'cy', 'cz', 'ax', 'ay', 'az', 'rotY', 'exposure', 'bloom', 'scrim', 'aw'];
+export const pose = (cam, aim, rotY, exposure = 1, bloom = 0.35, scrim = 0, aw = 0, xray = 0) =>
+  ({ cx: cam[0], cy: cam[1], cz: cam[2], ax: aim[0], ay: aim[1], az: aim[2], rotY, exposure, bloom, scrim, aw, xray });
+/* xray: 0 the body as built, 1 the body a ghost and the powertrain lit inside */
+export const POSE_KEYS = ['cx', 'cy', 'cz', 'ax', 'ay', 'az', 'rotY', 'exposure', 'bloom', 'scrim', 'aw', 'xray'];
 const KEYS = POSE_KEYS;
 
 function gradientTexture(stops, w = 256, h = 256, radial = true) {
@@ -385,6 +387,59 @@ export class Stage {
     }
   }
 
+  /* ── x-ray: the body ghosts, the powertrain shows ── */
+  stepXray(x) {
+    const cur = this.current;
+    if (!cur) return;
+    x = Math.max(0, Math.min(1, x));
+    if (x > 0.005 && !cur.pt) {
+      cur.pt = buildPowertrain(cur.car, this.clip);
+      cur.model.getObjectByName('shell').add(cur.pt.group);
+    }
+    if (Math.abs(x - cur.xray) > 0.001) {
+      cur.xray = x;
+      const M = cur.materials, e = x * x * (3 - 2 * x);
+      const ghost = (m, floor) => { m.opacity = 1 - (1 - floor) * e; m.depthWrite = e < 0.05; };
+      ghost(M.paint, 0.07); ghost(M.trim, 0.2); ghost(M.satin, 0.35); ghost(M.carbon, 0.2); ghost(M.tyre, 0.3);
+      M.glass.opacity = 0.86 * (1 - 0.85 * e);
+      /* the lamp bar would blaze through a ghost body: it fades with it */
+      M.lamp.opacity = 1 - 0.9 * e;
+      /* and the drawn side profile keeps the shape: one hairline per flank */
+      M.line.opacity = 0.55 * e;
+      if (cur.pt) cur.pt.group.visible = e > 0.01;
+    }
+    if (cur.pt && cur.pt.group.visible) cur.pt.animate(this.t, x);
+    this.placeLabels(x);
+  }
+
+  /* the instrument labels, tracking the parts on screen */
+  placeLabels(x) {
+    if (!this.labelLayer) {
+      this.labelLayer = document.createElement('div');
+      this.labelLayer.className = 'xray-labels';
+      this.labelLayer.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(this.labelLayer);
+    }
+    const cur = this.current;
+    const show = cur && cur.pt && x > 0.55;
+    this.labelLayer.style.opacity = show ? ((x - 0.55) / 0.45).toFixed(3) : '0';
+    if (!show) return;
+    if (this.labelLayer.dataset.car !== cur.car.id) {
+      this.labelLayer.dataset.car = cur.car.id;
+      this.labelLayer.innerHTML = cur.pt.anchors.map(a =>
+        `<div class="xl"><i></i><span class="mono">${a.label}<b>${a.value}</b></span></div>`).join('');
+    }
+    const els = this.labelLayer.children, v = new THREE.Vector3();
+    const w = innerWidth, h = innerHeight;
+    cur.pt.anchors.forEach((a, i) => {
+      a.obj.getWorldPosition(v).project(this.camera);
+      const el = els[i];
+      if (!el) return;
+      el.style.visibility = v.z < 1 ? 'visible' : 'hidden';
+      el.style.transform = `translate(${((v.x + 1) / 2 * w).toFixed(1)}px, ${((1 - v.y) / 2 * h).toFixed(1)}px)`;
+    });
+  }
+
   buildPost() {
     if (this.tier === 'low') return;
     const c = new EffectComposer(this.renderer);
@@ -413,11 +468,14 @@ export class Stage {
       m.clipShadows = true;
     }
     materials.tail.emissiveIntensity = 0.03;   // parked: the brake light is off
+    /* everything that ghosts in x-ray renders in the transparent pass; at
+       opacity 1 that is indistinguishable from opaque */
+    for (const k of ['paint', 'trim', 'satin', 'carbon', 'tyre', 'lamp']) materials[k].transparent = true;
     const model = buildCarModel(car.proto, { materials, tier: this.tier });
     model.visible = false;
     this.scene.add(model);
     setPaint(materials, PAINTS[car.paints[0]]);
-    const entry = { car, model, materials, paint: PAINTS[car.paints[0]] };
+    const entry = { car, model, materials, paint: PAINTS[car.paints[0]], xray: 0 };
     this.cars.set(car.id, entry);
     return entry;
   }
@@ -549,6 +607,7 @@ export class Stage {
 
     if (this.idle) this.glow.material.opacity = 0.9 + Math.sin(this.t * 0.6) * 0.1;
     this.stepMeteors(dt);
+    this.stepXray(n.xray);
 
     if (this.composer) this.composer.render();
     else this.renderer.render(this.scene, this.camera);

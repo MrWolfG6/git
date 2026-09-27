@@ -113,6 +113,19 @@ img, svg, canvas { display: block; }
 .is-loading .rail, .is-loading .forecast { opacity: 0; }
 @media (max-width: 960px) { .rail, .forecast { display: none; } }
 
+/* ── x-ray labels: an instrument's call-outs, tracking the parts ── */
+.xray-labels { position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .3s linear; }
+.xl { position: absolute; left: 0; top: 0; will-change: transform; }
+.xl i { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border: 1px solid var(--bone); border-radius: 50%; }
+.xl i::after { content: ''; position: absolute; left: 2px; bottom: 5px; width: 1px; height: 34px; background: linear-gradient(0deg, var(--bone), rgba(242,239,233,.2)); }
+.xl span {
+  position: absolute; left: -1px; bottom: 40px; display: grid; gap: 3px; white-space: nowrap;
+  padding: 0 0 0 10px; border-left: 1px solid var(--line-2);
+  font-size: 9.5px; color: var(--ash); letter-spacing: .14em;
+}
+.xl b { font-weight: 400; color: var(--bone); font-size: 11px; letter-spacing: .08em; }
+@media (max-width: 700px) { .xl span { font-size: 8.5px; } .xl b { font-size: 10px; } }
+
 /* ── the mark, as SVG ── */
 .mark { width: 100%; height: 100%; overflow: visible; }
 .mark path { fill: currentColor; }
