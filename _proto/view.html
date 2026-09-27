@@ -1,0 +1,44 @@
+<!doctype html><html><head>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+</head><body style="margin:0;background:#d9d9dc"><canvas id=c></canvas>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { buildCarModel, makeMaterials } from '/assets/js/builder.js';
+import { buildLoftBody, buildLoftDetails, CONCEPT } from './loft.js';
+const q = new URLSearchParams(location.search), view = q.get('view') || 'side';
+const W = innerWidth, H = innerHeight;
+const r = new THREE.WebGLRenderer({ canvas: c, antialias: true });
+r.setSize(W, H); r.toneMapping = THREE.ACESFilmicToneMapping; r.shadowMap.enabled = true;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xd9d9dc);
+scene.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), 0.04).texture;
+const key = new THREE.DirectionalLight(0xffffff, 1.2); key.position.set(1, 8, 3); key.castShadow = true;
+Object.assign(key.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4 }); key.shadow.mapSize.set(2048, 2048);
+scene.add(key);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.ShadowMaterial({ opacity: 0.35 }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+
+const M = makeMaterials();
+const car = buildCarModel('kestrel', { materials: M, tier: 'high' });
+const shell = car.getObjectByName('shell');
+for (const o of [...shell.children]) if (o.name !== 'wheel') shell.remove(o);
+const paint = new THREE.MeshPhysicalMaterial({ color: 0x8a929c, metalness: 0.55, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.05, });
+const C = CONCEPT;
+/* wheels onto the concept's axles */
+const wheels = shell.children.filter(o => o.name === 'wheel');
+wheels.forEach(w => { w.position.x = w.position.x > 0 ? C.axleF : C.axleR; w.position.z = Math.sign(w.position.z) * C.trackZ; });
+const body = buildLoftBody(C, [paint, M.glass, new THREE.MeshStandardMaterial({ color: 0x050506, roughness: 0.9 })]);
+body.castShadow = true;
+shell.add(body);
+const lensMat = new THREE.MeshPhysicalMaterial({ color: 0x0c0d10, roughness: 0.05, metalness: 0.3, clearcoat: 1, transmission: 0 });
+shell.add(buildLoftDetails(C, body, { ...M, paint, lensMat }));
+car.traverse(o => { if (o.isMesh) o.castShadow = true; });
+scene.add(car);
+const cam = new THREE.PerspectiveCamera(view === 'side' ? 22 : 30, W / H, 0.1, 100);
+if (view === 'side') cam.position.set(0.05, 0.7, 7.2), cam.lookAt(0.05, 0.62, 0);
+else if (view === 'front') cam.position.set(4.2, 1.35, 3.6), cam.lookAt(0.2, 0.55, 0);
+else if (view === 'rear') cam.position.set(-4.1, 1.6, 3.5), cam.lookAt(-0.2, 0.6, 0);
+else cam.position.set(0.3, 6.2, 0.01), cam.lookAt(0.3, 0, 0);
+r.render(scene, cam);
+window.__done = true;
+</script></body></html>
