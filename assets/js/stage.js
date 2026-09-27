@@ -102,6 +102,7 @@ export class Stage {
     this.buildDais();
     this.buildBeams();
     this.buildMonolith();
+    this.buildMeteors();
     this.buildPost();
     this.resize();
     addEventListener('resize', () => this.resize(), { passive: true });
@@ -283,6 +284,72 @@ export class Stage {
     this.scene.add(g);
   }
 
+  /* Shooting stars in the far sky, behind the monolith. They are part of
+     the scene, not painted over it: the car, the dais and the mark hide
+     them, the fog softens them, the bloom catches them. Bone, never
+     corona; never more than two; the moon's path, upper left to lower
+     right. Off until a page asks for them. */
+  buildMeteors() {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 8;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 256, 0);
+    g.addColorStop(0, 'rgba(255,255,255,0)');
+    g.addColorStop(0.85, 'rgba(255,255,255,.7)');
+    g.addColorStop(1, 'rgba(255,255,255,1)');
+    x.fillStyle = g;
+    x.fillRect(0, 2, 256, 4);
+    const tex = new THREE.CanvasTexture(c);
+    this.meteors = { on: false, next: 2.5, live: [], every: [2.5, 5.5], pair: 0.3 };
+    for (let i = 0; i < 2; i++) {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
+        map: tex, color: 0xe8e6e0, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false
+      }));
+      m.visible = false;
+      m.layers.set(1);                 // the camera sees them; the dais mirror does not
+      this.scene.add(m);
+      this.meteors.live.push({ mesh: m, t: 0, life: 0, alive: false });
+    }
+  }
+
+  spawnMeteor() {
+    const slot = this.meteors.live.find(s => !s.alive);
+    if (!slot || REDUCED) return;
+    const a = (18 + Math.random() * 26) * Math.PI / 180;       // below the horizon
+    const speed = 12 + Math.random() * 8;                     // m/s at ~30 m: a quick streak
+    Object.assign(slot, {
+      alive: true, t: 0, life: 0.8 + Math.random() * 0.5,
+      x: -18 + Math.random() * 24, y: 7 + Math.random() * 7, z: -20 - Math.random() * 6,
+      dx: Math.cos(a), dy: -Math.sin(a), speed, len: 3 + Math.random() * 3.5
+    });
+    slot.mesh.rotation.z = -a;
+    slot.mesh.visible = true;
+  }
+
+  stepMeteors(dt) {
+    const M = this.meteors;
+    if (M.on && !REDUCED) {
+      M.next -= dt;
+      if (M.next <= 0) {
+        this.spawnMeteor();
+        if (Math.random() < M.pair) setTimeout(() => this.spawnMeteor(), 180 + Math.random() * 380);
+        M.next = M.every[0] + Math.random() * (M.every[1] - M.every[0]);
+      }
+    }
+    for (const s of M.live) {
+      if (!s.alive) continue;
+      s.t += dt;
+      const k = s.t / s.life;
+      if (k >= 1) { s.alive = false; s.mesh.visible = false; continue; }
+      const hx = s.x + s.dx * s.speed * s.t, hy = s.y + s.dy * s.speed * s.t;
+      const tail = s.len * Math.min(1, k * 3);
+      s.mesh.scale.set(tail, 0.05, 1);
+      s.mesh.position.set(hx - s.dx * tail / 2, hy - s.dy * tail / 2, s.z);
+      s.mesh.material.opacity = Math.min(1, k * 6) * Math.pow(1 - k, 1.4) * 0.9;
+    }
+  }
+
   buildPost() {
     if (this.tier === 'low') return;
     const c = new EffectComposer(this.renderer);
@@ -446,6 +513,7 @@ export class Stage {
     document.documentElement.style.setProperty('--scrim', n.scrim.toFixed(3));
 
     if (this.idle) this.glow.material.opacity = 0.9 + Math.sin(this.t * 0.6) * 0.1;
+    this.stepMeteors(dt);
 
     if (this.composer) this.composer.render();
     else this.renderer.render(this.scene, this.camera);
