@@ -260,7 +260,7 @@ function sculptK(S, x, y) {
     const band = Math.exp(-Math.pow((y - S.archY) / S.archSY, 2) / 2);
     for (const a of S.arches) k *= 1 + a.s * band * Math.exp(-Math.pow((x - a.x) / a.sx, 2) / 2);
   }
-  /* wide enough to sit on the lid grid (0.11 m) without banding */
+  /* wide enough to sit on the lid grid (0.075 m) without banding */
   if (S.shoulder) k *= 1 + S.shoulder * Math.exp(-Math.pow((y - S.shoulderY) / 0.085, 2) / 2);
   if (S.tuck) k *= 1 - S.tuck * (1 - smooth01((y - S.tuckY) / 0.28));
   return k;
@@ -304,9 +304,15 @@ function lidTriangles(shape, curveSegments, spacing) {
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   for (const p of contour) { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); }
   const steiner = [];
-  for (let x = minX + spacing / 2; x < maxX; x += spacing)
-    for (let y = minY + spacing / 2; y < maxY; y += spacing)
-      if (inside(contour, x, y) && edgeDistance(contour, x, y) > spacing * 0.45) steiner.push(new THREE.Vector2(x, y));
+  /* a staggered grid with a small fixed jitter: points in exact rows are
+     collinear, and earcut drops the slivers between them, leaving cracks */
+  let seed = 1;
+  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647 - 0.5;
+  for (let j = 0, y = minY + spacing / 2; y < maxY; j++, y += spacing * 0.866)
+    for (let x = minX + spacing * (j % 2 ? 1 : 0.5); x < maxX; x += spacing) {
+      const px = x + rand() * spacing * 0.2, py = y + rand() * spacing * 0.2;
+      if (inside(contour, px, py) && edgeDistance(contour, px, py) > spacing * 0.45) steiner.push(new THREE.Vector2(px, py));
+    }
   const faces = THREE.ShapeUtils.triangulateShape(contour, steiner.map(p => [p]));
   return { pts: [...contour, ...steiner], faces };
 }
@@ -327,7 +333,7 @@ function extrude(shape, width, bevel, detail, sculpt) {
   const src = geo.attributes.position.array;
   const walls = src.slice(lid.start * 3 + lid.count * 3);
   const before = src.slice(0, lid.start * 3);
-  const { pts, faces } = lidTriangles(shape, curveSegments, detail > 0.6 ? 0.11 : 0.22);
+  const { pts, faces } = lidTriangles(shape, curveSegments, detail > 0.6 ? 0.075 : 0.2);
   const zLid = depth / 2 + bevel;
   const lids = [];
   for (const side of [-1, 1]) {
@@ -342,9 +348,26 @@ function extrude(shape, width, bevel, detail, sculpt) {
   geo.dispose();
   const out = new THREE.BufferGeometry();
   out.setAttribute('position', new THREE.Float32BufferAttribute([...before, ...walls, ...lids], 3));
-  if (sculpt) shapeVertices(out, sculpt);
   const creased = BufferGeometryUtils.toCreasedNormals(out, Math.PI / 5);
   if (creased !== out) out.dispose();
+  /* Sculpt after the normals, and carry each normal through the sculpt
+     exactly (the inverse transpose of z' = z·k(x, y)). Normals taken from
+     the bent triangles instead follow every facet, and a long light strip
+     then breaks into dashes and sawteeth across the panels. */
+  if (sculpt) {
+    const pp = creased.attributes.position, n = creased.attributes.normal, h = 0.004;
+    for (let i = 0; i < pp.count; i++) {
+      const x = pp.getX(i), y = pp.getY(i), z = pp.getZ(i);
+      const k = sculptK(sculpt, x, y);
+      const kx = (sculptK(sculpt, x + h, y) - sculptK(sculpt, x - h, y)) / (2 * h);
+      const ky = (sculptK(sculpt, x, y + h) - sculptK(sculpt, x, y - h)) / (2 * h);
+      const nx = n.getX(i), ny = n.getY(i), nz = n.getZ(i);
+      const mx = nx - z * kx / k * nz, my = ny - z * ky / k * nz, mz = nz / k;
+      const L = Math.hypot(mx, my, mz) || 1;
+      n.setXYZ(i, mx / L, my / L, mz / L);
+      pp.setZ(i, z * k);
+    }
+  }
   return creased;
 }
 
@@ -580,7 +603,7 @@ export function buildCarModel(protoId, opts = {}) {
   put(new THREE.BoxGeometry(0.03, 0.075, P.width * 0.84), M.trim, tx + 0.006, P.tailY, 0);
 
   /* lines drawn on the flank itself: shut gaps, handles, the window trim */
-  const onFlank = (pts, side, mat, lift = 0.0025) => {
+  const onFlank = (pts, side, mat, lift = 0.006) => {
     const geo = new THREE.BufferGeometry().setFromPoints(pts.map(([x, y]) => new THREE.Vector3(x, y, side * (flankZ(x, y) + lift))));
     const l = new THREE.Line(geo, mat);
     l.name = 'detail';
@@ -597,7 +620,7 @@ export function buildCarModel(protoId, opts = {}) {
         const xr = xe - len;
         onFlank(vertical(xr, P.rocker + 0.09, beltAt(xr) - 0.035), s, M.shut);
         const hy = beltAt(xr + 0.2) - 0.13;                      // a flush handle, near the door's trailing edge
-        onFlank([[xr + 0.1, hy], [xr + 0.27, hy]], s, M.shut, 0.004);
+        onFlank(Array.from({ length: 8 }, (_, i) => [xr + 0.1 + 0.17 * i / 7, hy]), s, M.shut, 0.008);
         xe = xr;
       }
     }
