@@ -260,7 +260,8 @@ function sculptK(S, x, y) {
     const band = Math.exp(-Math.pow((y - S.archY) / S.archSY, 2) / 2);
     for (const a of S.arches) k *= 1 + a.s * band * Math.exp(-Math.pow((x - a.x) / a.sx, 2) / 2);
   }
-  if (S.shoulder) k *= 1 + S.shoulder * Math.exp(-Math.pow((y - S.shoulderY) / 0.045, 2) / 2);
+  /* wide enough to sit on the lid grid (0.11 m) without banding */
+  if (S.shoulder) k *= 1 + S.shoulder * Math.exp(-Math.pow((y - S.shoulderY) / 0.085, 2) / 2);
   if (S.tuck) k *= 1 - S.tuck * (1 - smooth01((y - S.tuckY) / 0.28));
   return k;
 }
@@ -271,6 +272,43 @@ function sculptK(S, x, y) {
 function shapeVertices(geo, S) {
   const pos = geo.attributes.position;
   for (let i = 0; i < pos.count; i++) pos.setZ(i, pos.getZ(i) * sculptK(S, pos.getX(i), pos.getY(i)));
+}
+
+/* Earcut fills a lid with long slivers from nose to tail and no
+   interior vertices; once the side is sculpted those slivers bend and
+   the shading streaks. So the lids ExtrudeGeometry builds are thrown
+   away and rebuilt with a grid of interior points (earcut takes each
+   as a one-point hole: a Steiner point), giving the curved flank
+   vertices to bend on. */
+function inside(pts, x, y) {
+  let c = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[i], b = pts[j];
+    if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) c = !c;
+  }
+  return c;
+}
+function edgeDistance(pts, x, y) {
+  let d = Infinity;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const a = pts[j], b = pts[i];
+    const dx = b.x - a.x, dy = b.y - a.y, L = dx * dx + dy * dy || 1;
+    const t = Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / L));
+    d = Math.min(d, Math.hypot(a.x + t * dx - x, a.y + t * dy - y));
+  }
+  return d;
+}
+function lidTriangles(shape, curveSegments, spacing) {
+  let contour = shape.extractPoints(curveSegments).shape;
+  if (contour.length > 1 && contour[0].equals(contour[contour.length - 1])) contour = contour.slice(0, -1);
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const p of contour) { minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x); minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y); }
+  const steiner = [];
+  for (let x = minX + spacing / 2; x < maxX; x += spacing)
+    for (let y = minY + spacing / 2; y < maxY; y += spacing)
+      if (inside(contour, x, y) && edgeDistance(contour, x, y) > spacing * 0.45) steiner.push(new THREE.Vector2(x, y));
+  const faces = THREE.ShapeUtils.triangulateShape(contour, steiner.map(p => [p]));
+  return { pts: [...contour, ...steiner], faces };
 }
 
 function extrude(shape, width, bevel, detail, sculpt) {
