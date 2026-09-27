@@ -284,47 +284,74 @@ export class Stage {
     this.scene.add(g);
   }
 
-  /* Shooting stars in the far sky, behind the monolith. They are part of
-     the scene, not painted over it: the car, the dais and the mark hide
-     them, the fog softens them, the bloom catches them. Bone, never
-     corona; never more than two; the moon's path, upper left to lower
-     right. Off until a page asks for them. */
+  /* Shooting stars in the far sky, behind the monolith. Part of the scene,
+     not painted over it: the car, the dais and the mark hide them, and
+     the bloom catches them. Each has the anatomy of a real one — a hot
+     head, a tail that tapers to a hairline, and a train that hangs a
+     moment after the head burns out. About one in five is a fireball:
+     slower, longer, brighter. Bone, never corona; never more than two;
+     the moon's path. Off until a page asks for them. */
   buildMeteors() {
+    /* the tail: hot and wide at the head (right), a hairline at the end */
     const c = document.createElement('canvas');
-    c.width = 256; c.height = 8;
+    c.width = 512; c.height = 32;
     const x = c.getContext('2d');
-    const g = x.createLinearGradient(0, 0, 256, 0);
+    const g = x.createLinearGradient(0, 0, 512, 0);
     g.addColorStop(0, 'rgba(255,255,255,0)');
-    g.addColorStop(0.85, 'rgba(255,255,255,.7)');
+    g.addColorStop(0.55, 'rgba(255,255,255,.35)');
+    g.addColorStop(0.92, 'rgba(255,255,255,.9)');
     g.addColorStop(1, 'rgba(255,255,255,1)');
     x.fillStyle = g;
-    x.fillRect(0, 2, 256, 4);
-    const tex = new THREE.CanvasTexture(c);
+    x.beginPath();
+    x.moveTo(0, 16); x.lineTo(512, 5); x.lineTo(512, 27); x.closePath();
+    x.fill();
+    const tailTex = new THREE.CanvasTexture(c);
+    /* the head: a point that blooms */
+    const h = document.createElement('canvas');
+    h.width = h.height = 64;
+    const hx = h.getContext('2d');
+    const hg = hx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    hg.addColorStop(0, 'rgba(255,255,255,1)');
+    hg.addColorStop(0.18, 'rgba(255,255,255,.7)');
+    hg.addColorStop(0.5, 'rgba(255,255,255,.12)');
+    hg.addColorStop(1, 'rgba(255,255,255,0)');
+    hx.fillStyle = hg;
+    hx.fillRect(0, 0, 64, 64);
+    const headTex = new THREE.CanvasTexture(h);
+
+    const bone = new THREE.Color(0xf2efe9);
     this.meteors = { on: false, next: 2.5, live: [], every: [2.5, 5.5], pair: 0.3 };
     for (let i = 0; i < 2; i++) {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
-        map: tex, color: 0xe8e6e0, transparent: true, opacity: 0,
-        blending: THREE.AdditiveBlending, depthWrite: false
+      const tail = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
+        map: tailTex, color: bone.clone().multiplyScalar(1.6), transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false, fog: false
       }));
-      m.visible = false;
-      m.layers.set(1);                 // the camera sees them; the dais mirror does not
-      this.scene.add(m);
-      this.meteors.live.push({ mesh: m, t: 0, life: 0, alive: false });
+      const head = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: headTex, color: bone.clone().multiplyScalar(2.4), transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+      }));
+      for (const o of [tail, head]) { o.visible = false; o.layers.set(1); this.scene.add(o); }   // not in the dais mirror
+      this.meteors.live.push({ tail, head, t: 0, life: 0, alive: false });
     }
   }
 
   spawnMeteor() {
     const slot = this.meteors.live.find(s => !s.alive);
     if (!slot || REDUCED) return;
+    const fire = Math.random() < 0.2;                         // a fireball, now and then
     const a = (18 + Math.random() * 26) * Math.PI / 180;       // below the horizon
-    const speed = 12 + Math.random() * 8;                     // m/s at ~30 m: a quick streak
     Object.assign(slot, {
-      alive: true, t: 0, life: 0.8 + Math.random() * 0.5,
+      alive: true, t: 0, fire,
+      life: fire ? 1.4 + Math.random() * 0.4 : 0.8 + Math.random() * 0.4,   // the head's burn
+      train: fire ? 0.8 : 0.5,                                              // how long the trail hangs after
       x: -18 + Math.random() * 24, y: 7 + Math.random() * 7, z: -20 - Math.random() * 6,
-      dx: Math.cos(a), dy: -Math.sin(a), speed, len: 3 + Math.random() * 3.5
+      dx: Math.cos(a), dy: -Math.sin(a),
+      speed: fire ? 9 + Math.random() * 4 : 13 + Math.random() * 8,
+      len: fire ? 7 + Math.random() * 3 : 3.5 + Math.random() * 3,
+      width: fire ? 0.14 : 0.08
     });
-    slot.mesh.rotation.z = -a;
-    slot.mesh.visible = true;
+    slot.tail.rotation.z = -a;
+    slot.tail.visible = slot.head.visible = true;
   }
 
   stepMeteors(dt) {
@@ -340,13 +367,21 @@ export class Stage {
     for (const s of M.live) {
       if (!s.alive) continue;
       s.t += dt;
-      const k = s.t / s.life;
-      if (k >= 1) { s.alive = false; s.mesh.visible = false; continue; }
-      const hx = s.x + s.dx * s.speed * s.t, hy = s.y + s.dy * s.speed * s.t;
-      const tail = s.len * Math.min(1, k * 3);
-      s.mesh.scale.set(tail, 0.05, 1);
-      s.mesh.position.set(hx - s.dx * tail / 2, hy - s.dy * tail / 2, s.z);
-      s.mesh.material.opacity = Math.min(1, k * 6) * Math.pow(1 - k, 1.4) * 0.9;
+      const k = Math.min(1, s.t / s.life);                   // the head's life
+      const after = Math.max(0, s.t - s.life) / s.train;     // the train's life once the head is gone
+      if (after >= 1) { s.alive = false; s.tail.visible = s.head.visible = false; continue; }
+      /* it slows a little as it burns, and stops where the head burns out */
+      const burn = Math.min(s.t, s.life);
+      const hx = s.x + s.dx * s.speed * (burn - 0.18 * burn * k), hy = s.y + s.dy * s.speed * (burn - 0.18 * burn * k);
+      const tail = s.len * Math.min(1, k * 2.5);
+      s.tail.scale.set(tail, s.width, 1);
+      s.tail.position.set(hx - s.dx * tail / 2, hy - s.dy * tail / 2, s.z);
+      /* in fast; the head burns out; the train lingers and fades */
+      const headA = Math.min(1, k * 8) * (1 - Math.pow(k, 4));
+      s.head.position.set(hx, hy, s.z + 0.01);
+      s.head.scale.setScalar((s.fire ? 0.9 : 0.55) * (0.7 + 0.3 * headA));
+      s.head.material.opacity = headA;
+      s.tail.material.opacity = (s.t < s.life ? Math.min(1, k * 6) : 1 - after) * (s.fire ? 1 : 0.85);
     }
   }
 
